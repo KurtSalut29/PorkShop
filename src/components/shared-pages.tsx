@@ -23,7 +23,7 @@ export async function ProfilePageBody({ role }: { role: Role }) {
   return (
     <>
       <PageHeader title="Profile & password" description="Keep your contact details current so the shop can reach you." />
-      <div className="grid max-w-3xl gap-6">
+      <div className="grid items-start gap-6 lg:grid-cols-2">
         <Section title="Personal details">
           <ProfileForm name={user.name} email={user.email} phone={user.phone ?? ""} />
         </Section>

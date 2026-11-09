@@ -7,10 +7,8 @@ export const metadata: Metadata = { title: "Notifications" };
 
 export default function Page() {
   return (
-    <div className="max-w-3xl">
-      <Suspense fallback={<PageSkeleton />}>
-        <NotificationsPageBody role="WORKER" />
-      </Suspense>
-    </div>
+    <Suspense fallback={<PageSkeleton />}>
+      <NotificationsPageBody role="WORKER" />
+    </Suspense>
   );
 }

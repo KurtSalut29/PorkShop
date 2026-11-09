@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Notifications" };
 
 export default function Page() {
   return (
-    <Container className="max-w-3xl py-8 sm:py-10">
+    <Container className="py-8 sm:py-10">
       <Suspense fallback={<PageSkeleton />}>
         <NotificationsPageBody role="CUSTOMER" />
       </Suspense>

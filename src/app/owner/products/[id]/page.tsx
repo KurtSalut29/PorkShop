@@ -13,7 +13,7 @@ export default async function EditProductPage({ params }: PageProps<"/owner/prod
   const product = await getProductById(id);
   if (!product) notFound();
   return (
-    <div className="max-w-4xl">
+    <div>
       <PageHeader
         back={{ href: "/owner/products", label: "Products" }}
         title={`Edit ${product.name}`}

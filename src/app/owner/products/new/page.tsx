@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Add product" };
 export default async function NewProductPage() {
   await requireRole("OWNER");
   return (
-    <div className="max-w-4xl">
+    <div>
       <PageHeader
         back={{ href: "/owner/products", label: "Products" }}
         title="Add product"
