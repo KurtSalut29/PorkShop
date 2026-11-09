@@ -89,7 +89,7 @@ export default function StoreLayout({ children }: LayoutProps<"/">) {
         </Container>
       </div>
       {/* Floating nav: takes no space of its own (main reserves --store-nav), so it hovers over the hero. */}
-      <header className="pointer-events-none sticky top-0 z-40 mb-[calc(var(--store-nav)*-1)] h-(--store-nav) pt-3">
+      <header style={{ viewTransitionName: "site-header" }} className="pointer-events-none sticky top-0 z-40 mb-[calc(var(--store-nav)*-1)] h-(--store-nav) pt-3">
         <Container>
           <div className="pointer-events-auto rounded-2xl border border-black/[0.06] bg-card/95 shadow-[0_1px_2px_oklch(0.2_0.03_268/0.06),0_12px_32px_-12px_oklch(0.2_0.03_268/0.28)] backdrop-blur-xl backdrop-saturate-150">
             <div className="flex h-16 items-center gap-4 pr-2.5 pl-3.5 sm:gap-8 sm:pr-3 sm:pl-5">

@@ -12,7 +12,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
       <aside className="relative hidden overflow-hidden bg-night text-white lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <div className="tile-grid pointer-events-none absolute inset-0 opacity-60 [filter:invert(1)]" aria-hidden />
+        <div className="night-glow pointer-events-none absolute inset-0" aria-hidden />
         <div className="relative">
           <Link href="/" aria-label="Porkshop home">
             <LogoEmblem className="-ml-2 w-36" />

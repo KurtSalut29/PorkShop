@@ -295,11 +295,13 @@ html::-webkit-scrollbar-track {
 }
 
 /* Fine tile grid used behind hero areas. */
-@utility tile-grid {
+/* Soft light on the Night navy panels (landing hero, sign-in): the logo's neon pink glows
+ * from the upper left, a cool blue from the lower right, and the edges fall off darker. */
+@utility night-glow {
   background-image:
-    linear-gradient(oklch(0.2 0.025 265 / 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, oklch(0.2 0.025 265 / 0.045) 1px, transparent 1px);
-  background-size: 28px 28px;
+    radial-gradient(60% 70% at 12% 18%, oklch(0.6 0.2 360 / 0.22), transparent 70%),
+    radial-gradient(55% 65% at 92% 85%, oklch(0.58 0.15 265 / 0.22), transparent 70%),
+    radial-gradient(120% 90% at 50% 0%, transparent 55%, oklch(0.12 0.03 268 / 0.6));
 }
 
 @utility enter {
@@ -365,4 +367,63 @@ html::-webkit-scrollbar-track {
 }
 [data-sonner-toast][data-styled="false"] [data-content] + [data-button] {
   margin-left: 2.75rem;
+}
+
+/* ── Page transitions ──────────────────────────────────────────────────────────────────
+ * Driven by <PageTransition> (React <ViewTransition>) in each route folder's template.tsx.
+ * The old page leaves fast so it never competes; the new page settles in with a short rise.
+ * Navigation chrome (store nav, staff top bar, sidebar) is anchored and doesn't move.
+ */
+:root {
+  --page-exit: 120ms;
+  --page-enter: 280ms;
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+}
+::view-transition {
+  pointer-events: none; /* clicks during the animation reach the new page */
+}
+/* The rest of the document is unchanged between pages: no whole-screen crossfade. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+::view-transition-old(.page-exit) {
+  animation: var(--page-exit) ease-in both page-fade-out;
+}
+::view-transition-new(.page-enter) {
+  animation: var(--page-enter) var(--ease-out-quint) 60ms both page-rise-in;
+}
+@keyframes page-fade-out {
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+@keyframes page-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+/* Anchored chrome sits above the moving page. */
+::view-transition-group(site-header),
+::view-transition-group(site-sidebar) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(site-header),
+::view-transition-old(site-sidebar) {
+  display: none;
+}
+::view-transition-new(site-header),
+::view-transition-new(site-sidebar) {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
 }

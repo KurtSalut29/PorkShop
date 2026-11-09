@@ -32,7 +32,7 @@ export default function HomePage() {
   return (
     <>
       <section className="relative -mt-(--store-nav) overflow-hidden bg-night pt-(--store-nav) text-white">
-        <div className="tile-grid pointer-events-none absolute inset-0 opacity-60 [filter:invert(1)]" aria-hidden />
+        <div className="night-glow pointer-events-none absolute inset-0" aria-hidden />
         <Container className="relative grid items-center gap-12 py-14 sm:py-20 lg:grid-cols-[1fr_1.05fr]">
           <div className="enter">
             <LogoEmblem className="-ml-2 w-28 sm:w-36" />
