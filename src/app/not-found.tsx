@@ -8,7 +8,7 @@ export default function NotFound() {
       <div className="max-w-md text-center">
         <LogoMark className="mx-auto size-10" />
         <p className="num mt-6 text-sm font-medium text-primary">404</p>
-        <h1 className="mt-2 text-2xl font-semibold">We couldn't find that page</h1>
+        <h1 className="mt-2 text-2xl font-semibold">We couldn’t find that page</h1>
         <p className="mt-2 text-muted-foreground">The link may be outdated, or the order or product may no longer exist.</p>
         <div className="mt-6 flex justify-center gap-2">
           <Button asChild>

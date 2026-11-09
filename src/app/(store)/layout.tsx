@@ -78,7 +78,7 @@ export default function StoreLayout({ children }: LayoutProps<"/">) {
           <div>
             <p className="font-medium">How pickup works</p>
             <p className="mt-2 text-muted-foreground">
-              Choose a time at checkout. We'll notify you when your order is packed. Pay by cash, GCash or card at the
+              Choose a time at checkout. We’ll notify you when your order is packed. Pay by cash, GCash or card at the
               counter.
             </p>
           </div>

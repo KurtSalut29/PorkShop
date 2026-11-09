@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
@@ -28,6 +28,18 @@ export function SignInForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+
+  // Cache Components keeps this page alive (hidden) after navigating away. Reset it when hidden
+  // so returning after sign-out shows a fresh form — not a stuck "Signing in…" button, and
+  // never a leftover password in the DOM.
+  useLayoutEffect(() => {
+    return () => {
+      setPending(false);
+      setPassword("");
+      setErrors({});
+      setFormError(null);
+    };
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();

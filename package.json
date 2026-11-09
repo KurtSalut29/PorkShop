@@ -18,7 +18,6 @@
     "test:concurrency": "tsx --conditions=react-server tests/integration/concurrency.ts && prisma db seed"
   },
   "dependencies": {
-    "@hookform/resolvers": "^7.0.5",
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
     "better-auth": "^1.7.18",
@@ -28,13 +27,11 @@
     "dotenv": "^18.0.10",
     "lucide-react": "^1.70.0",
     "next": "16.4.5",
-    "next-themes": "^0.4.6",
     "pg": "^8.23.1",
     "prisma": "^7.10.1",
     "radix-ui": "^1.8.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-hook-form": "^7.91.0",
     "recharts": "^3.10.1",
     "server-only": "^0.0.1",
     "shadcn": "^4.23.0",

@@ -18,16 +18,13 @@ type Issue = { kind: "gone" | "stock" | "price"; message: string };
 export function CartView() {
   const { items, ready, setQty, remove, replace, subtotal } = useCart();
   const [issues, setIssues] = useState<Record<string, Issue>>({});
-  const [checked, setChecked] = useState(false);
+  const [checkedIds, setCheckedIds] = useState<string | null>(null);
 
   // Re-price and re-check stock against the server whenever the set of products changes.
   const ids = items.map((i) => i.productId).join(",");
+  const checked = ids === "" || checkedIds === ids;
   useEffect(() => {
-    if (!ready) return;
-    if (!ids) {
-      setChecked(true);
-      return;
-    }
+    if (!ready || !ids) return;
     let cancelled = false;
     refreshCartAction(ids.split(",")).then((fresh) => {
       if (cancelled) return;
@@ -60,7 +57,7 @@ export function CartView() {
       });
       setIssues(found);
       if (changed) replace(next);
-      setChecked(true);
+      setCheckedIds(ids);
     });
     return () => {
       cancelled = true;

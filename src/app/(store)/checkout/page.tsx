@@ -11,7 +11,7 @@ export default function CheckoutPage() {
   return (
     <Container className="py-8 sm:py-10">
       <h1 className="text-2xl font-semibold sm:text-3xl">Checkout</h1>
-      <p className="mt-1 text-muted-foreground">Choose when you'd like to pick up your order.</p>
+      <p className="mt-1 text-muted-foreground">Choose when you’d like to pick up your order.</p>
       <Suspense fallback={<PageSkeleton />}>
         <Checkout />
       </Suspense>

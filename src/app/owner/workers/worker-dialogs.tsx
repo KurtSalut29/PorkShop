@@ -35,14 +35,15 @@ import type { WorkerRow } from "@/server/queries/misc";
 
 export function AddWorkerButton() {
   const [open, setOpen] = useState(false);
-  const [state, action] = useActionState(createWorkerAction, null);
-  const fe = state && !state.ok ? state.fieldErrors : undefined;
-  useEffect(() => {
-    if (state?.ok) {
-      toast.success(state.message);
+  const [state, action] = useActionState(async (prev: Awaited<ReturnType<typeof createWorkerAction>> | null, fd: FormData) => {
+    const res = await createWorkerAction(prev, fd);
+    if (res.ok) {
+      toast.success(res.message);
       setOpen(false);
     }
-  }, [state]);
+    return res;
+  }, null);
+  const fe = state && !state.ok ? state.fieldErrors : undefined;
 
   return (
     <>
@@ -146,7 +147,7 @@ function ResetPasswordDialog({ worker, open, onOpenChange }: { worker: WorkerRow
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Reset password for {worker.name}</DialogTitle>
-          <DialogDescription>They'll be signed out everywhere and must use the new password.</DialogDescription>
+          <DialogDescription>They’ll be signed out everywhere and must use the new password.</DialogDescription>
         </DialogHeader>
         <form action={action} className="grid gap-4">
           {state && !state.ok && <FormAlert state={state} />}

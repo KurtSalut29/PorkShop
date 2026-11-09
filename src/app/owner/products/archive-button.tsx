@@ -44,7 +44,7 @@ export function ArchiveButton({ id, name, archived }: { id: string; name: string
         <AlertDialogHeader>
           <AlertDialogTitle>Archive {name}?</AlertDialogTitle>
           <AlertDialogDescription>
-            It will be hidden from the catalog and can't be ordered. Its sales and stock history stay in your reports, and you
+            It will be hidden from the catalog and can’t be ordered. Its sales and stock history stay in your reports, and you
             can restore it at any time.
           </AlertDialogDescription>
         </AlertDialogHeader>

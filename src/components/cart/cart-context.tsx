@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, use, useCallback, useEffect, useMemo, useState } from "react";
+import { createContext, use, useCallback, useMemo, useSyncExternalStore } from "react";
 import { lineEstimate } from "@/lib/pricing";
 import type { ProductCategory } from "@/lib/constants";
 
@@ -28,18 +28,62 @@ type CartContextValue = {
   clear: () => void;
 };
 
-const CartContext = createContext<CartContextValue | null>(null);
-const STORAGE_KEY = "porkshop.cart.v1";
+// ── Browser cart store (localStorage, synced across tabs, in-memory fallback) ──
 
-function load(): CartItem[] {
+const STORAGE_KEY = "porkshop.cart.v1";
+const EMPTY: CartItem[] = [];
+const listeners = new Set<() => void>();
+let memory: string | null = null; // used when localStorage is unavailable (private mode)
+let cache: { raw: string | null; items: CartItem[] } = { raw: null, items: EMPTY };
+
+function parse(raw: string | null): CartItem[] {
+  if (!raw) return EMPTY;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const parsed = raw ? (JSON.parse(raw) as CartItem[]) : [];
-    return Array.isArray(parsed) ? parsed.filter((i) => i && typeof i.productId === "string" && i.qty > 0) : [];
+    const parsed = JSON.parse(raw) as CartItem[];
+    return Array.isArray(parsed) ? parsed.filter((i) => i && typeof i.productId === "string" && i.qty > 0) : EMPTY;
   } catch {
-    return [];
+    return EMPTY;
   }
 }
+
+function readRaw() {
+  try {
+    return localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return memory;
+  }
+}
+
+function getSnapshot() {
+  const raw = readRaw();
+  if (raw !== cache.raw) cache = { raw, items: parse(raw) };
+  return cache.items;
+}
+
+function write(items: CartItem[]) {
+  const raw = JSON.stringify(items);
+  memory = raw;
+  try {
+    localStorage.setItem(STORAGE_KEY, raw);
+  } catch {
+    /* fall back to memory */
+  }
+  listeners.forEach((l) => l());
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  const onStorage = (e: StorageEvent) => e.key === STORAGE_KEY && listener();
+  window.addEventListener("storage", onStorage);
+  return () => {
+    listeners.delete(listener);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
+const noopSubscribe = () => () => {};
+
+const CartContext = createContext<CartContextValue | null>(null);
 
 /**
  * The cart lives in the browser (no account needed to browse). Prices here are only a
@@ -47,44 +91,26 @@ function load(): CartItem[] {
  * every total, so a stale or tampered cart can never change what is charged.
  */
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    setItems(load());
-    setReady(true);
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY) setItems(load());
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
-
-  useEffect(() => {
-    if (!ready) return;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    } catch {
-      /* storage unavailable (private mode) — cart still works for this tab */
-    }
-  }, [items, ready]);
+  const items = useSyncExternalStore(subscribe, getSnapshot, () => EMPTY);
+  // false during SSR and hydration, true once running in the browser
+  const ready = useSyncExternalStore(noopSubscribe, () => true, () => false);
 
   const add = useCallback((item: CartItem) => {
-    setItems((prev) => {
-      const existing = prev.find((i) => i.productId === item.productId);
-      if (!existing) return [...prev, item];
-      return prev.map((i) =>
-        i.productId === item.productId ? { ...item, qty: Math.round((i.qty + item.qty) * 1000) / 1000 } : i,
-      );
-    });
+    const prev = getSnapshot();
+    const existing = prev.find((i) => i.productId === item.productId);
+    write(
+      existing
+        ? prev.map((i) => (i.productId === item.productId ? { ...item, qty: Math.round((i.qty + item.qty) * 1000) / 1000 } : i))
+        : [...prev, item],
+    );
   }, []);
 
   const setQty = useCallback((productId: string, qty: number) => {
-    setItems((prev) => prev.map((i) => (i.productId === productId ? { ...i, qty } : i)));
+    write(getSnapshot().map((i) => (i.productId === productId ? { ...i, qty } : i)));
   }, []);
 
   const remove = useCallback((productId: string) => {
-    setItems((prev) => prev.filter((i) => i.productId !== productId));
+    write(getSnapshot().filter((i) => i.productId !== productId));
   }, []);
 
   const value = useMemo<CartContextValue>(
@@ -96,8 +122,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       add,
       setQty,
       remove,
-      replace: setItems,
-      clear: () => setItems([]),
+      replace: write,
+      clear: () => write([]),
     }),
     [items, ready, add, setQty, remove],
   );

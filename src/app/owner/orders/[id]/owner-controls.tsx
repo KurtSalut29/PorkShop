@@ -105,7 +105,7 @@ export function ReassignDialog({ order, workers }: { order: OrderView; workers: 
             </SelectContent>
           </Select>
           {target && target !== "__queue" && workers.find((w) => w.id === target)?.dutyStatus !== "ON_DUTY" && (
-            <p className="text-[13px] text-amber-800">This worker isn't on duty. Make sure they know about it.</p>
+            <p className="text-[13px] text-amber-800">This worker isn’t on duty. Make sure they know about it.</p>
           )}
         </div>
         <DialogFooter>

@@ -45,7 +45,7 @@ async function OrderDetailView({
           <div className="text-sm">
             <p className="font-medium">Thank you! Your order has been placed.</p>
             <p className="mt-0.5 text-emerald-900/80">
-              We'll notify you as soon as a butcher picks it up and again when it's ready.
+              We’ll notify you as soon as a butcher picks it up and again when it’s ready.
             </p>
           </div>
         </div>

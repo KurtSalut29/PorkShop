@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { snapQty, type QtyRule } from "@/lib/pricing";
 import { unitLabel } from "@/lib/format";
@@ -24,8 +24,9 @@ export function QtyStepper({
   className?: string;
   id?: string;
 }) {
-  const [text, setText] = useState(String(value));
-  useEffect(() => setText(String(value)), [value]);
+  // While typing we hold a draft; otherwise the field always shows the committed value.
+  const [draft, setDraft] = useState<string | null>(null);
+  const text = draft ?? String(value);
 
   const clamp = (q: number) => {
     let next = snapQty(q, rule);
@@ -54,11 +55,11 @@ export function QtyStepper({
           id={id}
           inputMode="decimal"
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => setDraft(e.target.value)}
           onBlur={() => {
             const n = Number(text);
             const next = Number.isFinite(n) && n > 0 ? clamp(n) : value;
-            setText(String(next));
+            setDraft(null);
             onChange(next);
           }}
           onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}

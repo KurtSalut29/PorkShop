@@ -31,7 +31,7 @@ export default async function AssignmentsPage() {
           <span className="font-medium text-foreground">Load-balancing rule:</span> each queued order (earliest pickup first) goes
           to the <span className="text-foreground">on-duty</span> worker with the <span className="text-foreground">fewest active orders</span>{" "}
           (assigned + preparing). Ties go to whoever has waited longest since their last assignment. Workers at capacity are
-          skipped. Packed orders don't count toward workload. {onDuty.length} on duty · {freeSlots} free slot{freeSlots === 1 ? "" : "s"}.
+          skipped. Packed orders don’t count toward workload. {onDuty.length} on duty · {freeSlots} free slot{freeSlots === 1 ? "" : "s"}.
         </p>
       </div>
 

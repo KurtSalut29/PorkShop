@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -15,19 +15,24 @@ import { PasswordInput, StrengthMeter } from "../password-input";
 
 type Values = { name: string; email: string; phone: string; password: string; confirmPassword: string; terms: boolean };
 
+const EMPTY: Values = { name: "", email: "", phone: "", password: "", confirmPassword: "", terms: false };
+
 export function SignUpForm() {
   const router = useRouter();
-  const [values, setValues] = useState<Values>({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
-    terms: false,
-  });
+  const [values, setValues] = useState<Values>(EMPTY);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+
+  // Cache Components keeps this page alive (hidden) after navigating away — start fresh next time.
+  useLayoutEffect(() => {
+    return () => {
+      setValues(EMPTY);
+      setErrors({});
+      setFormError(null);
+      setPending(false);
+    };
+  }, []);
 
   const set = (key: keyof Values) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setValues((v) => ({ ...v, [key]: e.target.value }));
