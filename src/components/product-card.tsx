@@ -36,7 +36,7 @@ function Availability({ product }: { product: ProductView }) {
   );
 }
 
-export function ProductCard({ product }: { product: ProductView }) {
+export function ProductCard({ product, eager = false }: { product: ProductView; eager?: boolean }) {
   const soldOut = product.level === "out";
   return (
     <article className="group relative flex flex-col rounded-2xl border bg-card p-2 shadow-[0_1px_2px_oklch(0.2_0.01_240/0.05)] transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-12px_oklch(0.2_0.02_240/0.25)]">
@@ -47,6 +47,7 @@ export function ProductCard({ product }: { product: ProductView }) {
         label={product.localName}
         imageUrl={product.imageUrl}
         imageStyle={product.imageStyle}
+        eager={eager}
         className={cn("aspect-[16/9] rounded-xl sm:aspect-[4/3]", soldOut && "grayscale-[0.7]")}
       />
       <div className="flex flex-1 flex-col px-2.5 pt-3.5 pb-2">

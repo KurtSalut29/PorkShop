@@ -87,8 +87,8 @@ async function Catalog({ searchParams }: { searchParams: PageProps<"/shop">["sea
             {q && <> matching “{q}”</>}
           </p>
           <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {products.map((p) => (
-              <ProductCard key={p.id} product={p} />
+            {products.map((p, i) => (
+              <ProductCard key={p.id} product={p} eager={i < 4} />
             ))}
           </div>
         </>

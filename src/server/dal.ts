@@ -38,6 +38,16 @@ export async function requireUser() {
   return user;
 }
 
+/**
+ * The signed-in user if they have one of `roles`, otherwise null. Never redirects: for parts of
+ * a page (nav badges, top bar) that should simply not render for the wrong visitor, so the
+ * page's single gate (RoleGate) is the only place that sends them elsewhere.
+ */
+export async function getUserWithRole(...roles: Role[]) {
+  const user = await getCurrentUser();
+  return user && roles.includes(user.role) ? user : null;
+}
+
 export async function requireRole(...roles: Role[]) {
   const user = await requireUser();
   if (!roles.includes(user.role)) redirect(homeFor(user.role));

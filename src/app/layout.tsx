@@ -3,6 +3,7 @@ import { Archivo, IBM_Plex_Mono, Instrument_Sans } from "next/font/google";
 import { ConfirmProvider } from "@/components/feedback/confirm";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ViewTransitionGuard } from "@/components/view-transition-guard";
 import "./globals.css";
 
 /** Display: wide grotesk with a shop-sign voice. Used sparingly for headings and product labels. */
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <ConfirmProvider>{children}</ConfirmProvider>
         </TooltipProvider>
         <Toaster />
+        <ViewTransitionGuard />
       </body>
     </html>
   );

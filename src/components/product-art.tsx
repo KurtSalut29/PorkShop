@@ -42,6 +42,7 @@ export function ProductArt({
   className,
   size = "md",
   priority = false,
+  eager = false,
   imageStyle = "cutout",
 }: {
   category: ProductCategory;
@@ -52,6 +53,8 @@ export function ProductArt({
   className?: string;
   size?: "sm" | "md" | "lg";
   priority?: boolean;
+  /** Load immediately without preloading: for the first row of a grid, where any card may be the LCP. */
+  eager?: boolean;
   /** "cutout" = studio shot on white (blended onto the tile); "photo" = has its own background (full-bleed). */
   imageStyle?: "cutout" | "photo";
 }) {
@@ -71,6 +74,7 @@ export function ProductArt({
               fill
               sizes={SIZES[size]}
               preload={priority}
+              loading={!priority && eager ? "eager" : undefined}
               quality={90}
               className={cutout ? "object-contain mix-blend-multiply" : "object-cover"}
             />
