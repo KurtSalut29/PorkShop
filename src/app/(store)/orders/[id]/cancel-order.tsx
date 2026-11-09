@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { runAction } from "@/components/feedback/notify";
 import { cancelOrderAction } from "@/app/actions/orders";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,13 +24,10 @@ export function CancelOrderButton({ orderId, mode }: { orderId: string; mode: "c
 
   function confirm() {
     startTransition(async () => {
-      const res = await cancelOrderAction(orderId, reason);
-      if (res.ok) {
-        toast.success(res.message);
-        setOpen(false);
-      } else {
-        toast.error(res.message);
-      }
+      const res = await runAction(() => cancelOrderAction(orderId, reason), {
+        loading: mode === "cancel" ? "Cancelling your order…" : "Sending your request…",
+      });
+      if (res?.ok) setOpen(false);
     });
   }
 

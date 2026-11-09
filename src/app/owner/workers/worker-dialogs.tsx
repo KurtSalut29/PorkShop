@@ -1,8 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { KeyRound, MoreHorizontal, Pencil, Power, UserPlus } from "lucide-react";
-import { toast } from "sonner";
 import {
   createWorkerAction,
   resetWorkerPasswordAction,
@@ -10,17 +9,9 @@ import {
   updateWorkerAction,
 } from "@/app/actions/admin";
 import { PasswordInput } from "@/app/(auth)/password-input";
-import { errorFor, Field, FormAlert, SubmitButton } from "@/components/form";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { useConfirm, useConfirmedFormAction } from "@/components/feedback/confirm";
+import { runAction } from "@/components/feedback/notify";
+import { errorFor, Field, SubmitButton } from "@/components/form";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -35,15 +26,20 @@ import type { WorkerRow } from "@/server/queries/misc";
 
 export function AddWorkerButton() {
   const [open, setOpen] = useState(false);
-  const [state, action] = useActionState(async (prev: Awaited<ReturnType<typeof createWorkerAction>> | null, fd: FormData) => {
-    const res = await createWorkerAction(prev, fd);
-    if (res.ok) {
-      toast.success(res.message);
-      setOpen(false);
-    }
-    return res;
-  }, null);
-  const fe = state && !state.ok ? state.fieldErrors : undefined;
+  const { onSubmit, pending, fieldErrors: fe } = useConfirmedFormAction(createWorkerAction, {
+    loading: "Creating the worker account…",
+    confirm: (fd) => ({
+      title: `Create an account for ${String(fd.get("name") || "this worker")}?`,
+      description: "They can sign in straight away with this email and the temporary password. Share the password with them in person.",
+      details: [
+        { label: "Email", value: String(fd.get("email") ?? "") },
+        { label: "Mobile", value: String(fd.get("phone") ?? "") },
+        { label: "Starts as", value: "Off duty" },
+      ],
+      confirmLabel: "Create account",
+    }),
+    onSuccess: () => setOpen(false),
+  });
 
   return (
     <>
@@ -54,31 +50,30 @@ export function AddWorkerButton() {
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Add a worker</DialogTitle>
-            <DialogDescription>
-              Create their account and share the temporary password. They can change it under Profile after signing in.
-            </DialogDescription>
+            <DialogDescription>They can change the temporary password under Profile after signing in.</DialogDescription>
           </DialogHeader>
-          <form action={action} className="grid gap-4">
-            {state && !state.ok && <FormAlert state={state} />}
+          <form onSubmit={onSubmit} className="grid gap-4" noValidate>
             <Field label="Full name" htmlFor="w-name" error={errorFor(fe, "name")}>
-              <Input id="w-name" name="name" autoComplete="off" />
+              <Input id="w-name" name="name" autoComplete="off" aria-invalid={!!errorFor(fe, "name")} />
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Email (used to sign in)" htmlFor="w-email" error={errorFor(fe, "email")}>
-                <Input id="w-email" name="email" type="email" autoComplete="off" />
+                <Input id="w-email" name="email" type="email" autoComplete="off" aria-invalid={!!errorFor(fe, "email")} />
               </Field>
               <Field label="Mobile number" htmlFor="w-phone" error={errorFor(fe, "phone")}>
-                <Input id="w-phone" name="phone" type="tel" placeholder="09171234567" />
+                <Input id="w-phone" name="phone" type="tel" placeholder="09171234567" aria-invalid={!!errorFor(fe, "phone")} />
               </Field>
             </div>
             <Field label="Temporary password" htmlFor="w-password" error={errorFor(fe, "password")} hint="At least 8 characters with a letter and a number">
-              <PasswordInput id="w-password" name="password" autoComplete="new-password" />
+              <PasswordInput id="w-password" name="password" autoComplete="new-password" aria-invalid={!!errorFor(fe, "password")} />
             </Field>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-              <SubmitButton pendingLabel="Creating…">Create account</SubmitButton>
+              <SubmitButton pending={pending} pendingLabel="Creating…">
+                Create account
+              </SubmitButton>
             </div>
           </form>
         </DialogContent>
@@ -88,44 +83,45 @@ export function AddWorkerButton() {
 }
 
 function EditWorkerDialog({ worker, open, onOpenChange }: { worker: WorkerRow; open: boolean; onOpenChange: (o: boolean) => void }) {
-  const [state, action] = useActionState(updateWorkerAction.bind(null, worker.id), null);
-  const fe = state && !state.ok ? state.fieldErrors : undefined;
-  useEffect(() => {
-    if (state?.ok) {
-      toast.success(state.message);
-      onOpenChange(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
+  const { onSubmit, pending, fieldErrors: fe } = useConfirmedFormAction(updateWorkerAction.bind(null, worker.id), {
+    loading: "Saving worker details…",
+    confirm: (fd) => {
+      const cap = String(fd.get("maxActiveOrders") ?? "").trim();
+      return {
+        title: `Save changes to ${worker.name}?`,
+        description: cap !== String(worker.maxActiveOrders ?? "") ? "A new order limit affects automatic assignment right away." : undefined,
+        details: [
+          { label: "Name", value: String(fd.get("name") ?? "") },
+          { label: "Mobile", value: String(fd.get("phone") ?? "") },
+          { label: "Order limit", value: cap || "Shop default" },
+        ],
+        confirmLabel: "Save changes",
+      };
+    },
+    onSuccess: () => onOpenChange(false),
+  });
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit {worker.name}</DialogTitle>
-          <DialogDescription>Update contact details or give this worker a custom order capacity.</DialogDescription>
+          <DialogDescription>Update contact details or give this worker their own order limit.</DialogDescription>
         </DialogHeader>
-        <form action={action} className="grid gap-4">
-          {state && !state.ok && <FormAlert state={state} />}
+        <form onSubmit={onSubmit} className="grid gap-4" noValidate>
           <Field label="Full name" htmlFor="e-name" error={errorFor(fe, "name")}>
             <Input id="e-name" name="name" defaultValue={worker.name} />
           </Field>
           <Field label="Mobile number" htmlFor="e-phone" error={errorFor(fe, "phone")}>
             <Input id="e-phone" name="phone" defaultValue={worker.phone ?? ""} />
           </Field>
-          <Field
-            label="Max active orders"
-            htmlFor="e-cap"
-            optional
-            error={errorFor(fe, "maxActiveOrders")}
-            hint="Leave blank to use the shop default from Settings"
-          >
+          <Field label="Max active orders" htmlFor="e-cap" optional error={errorFor(fe, "maxActiveOrders")} hint="Leave blank to use the shop default from Settings">
             <Input id="e-cap" name="maxActiveOrders" inputMode="numeric" defaultValue={worker.maxActiveOrders ?? ""} className="num w-32" />
           </Field>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <SubmitButton>Save</SubmitButton>
+            <SubmitButton pending={pending}>Save</SubmitButton>
           </div>
         </form>
       </DialogContent>
@@ -134,31 +130,32 @@ function EditWorkerDialog({ worker, open, onOpenChange }: { worker: WorkerRow; o
 }
 
 function ResetPasswordDialog({ worker, open, onOpenChange }: { worker: WorkerRow; open: boolean; onOpenChange: (o: boolean) => void }) {
-  const [state, action] = useActionState(resetWorkerPasswordAction.bind(null, worker.id), null);
-  useEffect(() => {
-    if (state?.ok) {
-      toast.success(state.message);
-      onOpenChange(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
+  const { onSubmit, pending, fieldErrors: fe } = useConfirmedFormAction(resetWorkerPasswordAction.bind(null, worker.id), {
+    loading: "Resetting password…",
+    confirm: () => ({
+      title: `Reset ${worker.name}’s password?`,
+      description: "They’ll be signed out on every device and must use the new password. Share it with them in person.",
+      confirmLabel: "Reset password",
+      tone: "warning",
+    }),
+    onSuccess: () => onOpenChange(false),
+  });
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Reset password for {worker.name}</DialogTitle>
-          <DialogDescription>They’ll be signed out everywhere and must use the new password.</DialogDescription>
+          <DialogDescription>Choose a temporary password for them to sign in with.</DialogDescription>
         </DialogHeader>
-        <form action={action} className="grid gap-4">
-          {state && !state.ok && <FormAlert state={state} />}
-          <Field label="New temporary password" htmlFor="r-password" error={state && !state.ok ? errorFor(state.fieldErrors, "password") : undefined}>
+        <form onSubmit={onSubmit} className="grid gap-4" noValidate>
+          <Field label="New temporary password" htmlFor="r-password" error={errorFor(fe, "password")}>
             <PasswordInput id="r-password" name="password" autoComplete="new-password" />
           </Field>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <SubmitButton>Reset password</SubmitButton>
+            <SubmitButton pending={pending}>Reset password</SubmitButton>
           </div>
         </form>
       </DialogContent>
@@ -167,21 +164,43 @@ function ResetPasswordDialog({ worker, open, onOpenChange }: { worker: WorkerRow
 }
 
 export function WorkerRowActions({ worker }: { worker: WorkerRow }) {
-  const [dialog, setDialog] = useState<"edit" | "password" | "active" | null>(null);
+  const confirm = useConfirm();
+  const [dialog, setDialog] = useState<"edit" | "password" | null>(null);
   const [pending, start] = useTransition();
-  const toggle = () =>
+
+  async function toggleActive() {
+    const ok = await confirm(
+      worker.active
+        ? {
+            title: `Deactivate ${worker.name}?`,
+            description: `They’ll be signed out immediately and can’t sign in. ${
+              worker.openOrders
+                ? "Orders they haven’t finished go back to the queue for automatic reassignment. Packed orders are flagged on the Assignments page."
+                : "They have no open orders."
+            }`,
+            details: [{ label: "Open orders", value: String(worker.openOrders) }],
+            confirmLabel: "Deactivate",
+            tone: "destructive",
+          }
+        : {
+            title: `Reactivate ${worker.name}?`,
+            description: "They can sign in again. They start off duty and won’t receive orders until they go on duty.",
+            confirmLabel: "Reactivate",
+          },
+    );
+    if (!ok) return;
     start(async () => {
-      const res = await setWorkerActiveAction(worker.id, !worker.active);
-      if (res.ok) toast.success(res.message);
-      else toast.error(res.message);
-      setDialog(null);
+      await runAction(() => setWorkerActiveAction(worker.id, !worker.active), {
+        loading: worker.active ? "Deactivating…" : "Reactivating…",
+      });
     });
+  }
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${worker.name}`}>
+          <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${worker.name}`} disabled={pending}>
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -193,7 +212,7 @@ export function WorkerRowActions({ worker }: { worker: WorkerRow }) {
             <KeyRound /> Reset password
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem variant={worker.active ? "destructive" : "default"} onSelect={() => setDialog("active")}>
+          <DropdownMenuItem variant={worker.active ? "destructive" : "default"} onSelect={() => void toggleActive()}>
             <Power /> {worker.active ? "Deactivate" : "Reactivate"}
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -201,31 +220,6 @@ export function WorkerRowActions({ worker }: { worker: WorkerRow }) {
 
       <EditWorkerDialog worker={worker} open={dialog === "edit"} onOpenChange={(o) => setDialog(o ? "edit" : null)} />
       <ResetPasswordDialog worker={worker} open={dialog === "password"} onOpenChange={(o) => setDialog(o ? "password" : null)} />
-      <AlertDialog open={dialog === "active"} onOpenChange={(o) => setDialog(o ? "active" : null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{worker.active ? `Deactivate ${worker.name}?` : `Reactivate ${worker.name}?`}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {worker.active
-                ? `They'll be signed out and can't sign in. ${worker.openOrders ? `Their unfinished orders go back to the queue for automatic reassignment; packed orders will be flagged for you.` : "They have no open orders."}`
-                : "They'll be able to sign in again. They start off duty."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                toggle();
-              }}
-              disabled={pending}
-              className={worker.active ? "bg-destructive text-white hover:bg-destructive/90" : undefined}
-            >
-              {worker.active ? "Deactivate" : "Reactivate"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

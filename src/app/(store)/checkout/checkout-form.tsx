@@ -4,9 +4,11 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CalendarX2, Loader2, Lock, Store } from "lucide-react";
-import { toast } from "sonner";
 import { placeOrderAction } from "@/app/actions/orders";
 import { useCart } from "@/components/cart/cart-context";
+import { useConfirm } from "@/components/feedback/confirm";
+import { notify, runAction } from "@/components/feedback/notify";
+import { Ticket } from "@/components/ticket";
 import { FormAlert } from "@/components/form";
 import { EmptyState } from "@/components/page";
 import { Button } from "@/components/ui/button";
@@ -26,6 +28,7 @@ export function CheckoutForm({
   customer: { name: string; phone: string };
 }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const { items, ready, subtotal, clear } = useCart();
   const firstOpenDay = days.find((d) => d.slots.some((s) => s.remaining > 0));
   const [dayKey, setDayKey] = useState(firstOpenDay?.key ?? days[0]?.key ?? "");
@@ -52,25 +55,48 @@ export function CheckoutForm({
   const day = days.find((d) => d.key === dayKey);
   const chosen = day?.slots.find((s) => s.iso === slot);
 
-  function submit() {
+  async function submit() {
     setError(null);
-    if (!slot) {
+    if (!slot || !chosen) {
       setError("Choose a pickup time to continue.");
+      notify.warning("Choose a pickup time first", "Pick a day and an open time slot in step 1.");
+      document.getElementById("pickup-heading")?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
+    const ok = await confirm({
+      title: "Place this order?",
+      description: "We’ll reserve these cuts for you and assign your order to a butcher right away. You can cancel free of charge until preparation starts.",
+      details: [
+        ...items.map((i) => ({ label: `${i.name} · ${formatQty(i.qty, i.unit)}`, value: formatPeso(lineEstimate(i.price, i.qty)) })),
+        { label: "Pickup", value: `${day?.label}, ${chosen.label}` },
+        { label: "Payment", value: "At the counter" },
+        { label: "Estimated total", value: formatPeso(subtotal) },
+      ],
+      confirmLabel: "Place order",
+      cancelLabel: "Review again",
+    });
+    if (!ok) return;
     startTransition(async () => {
-      const res = await placeOrderAction({
-        items: items.map((i) => ({ productId: i.productId, qty: i.qty })),
-        pickupAt: slot,
-        notes: notes.trim() || undefined,
-      });
+      const res = await runAction(
+        () =>
+          placeOrderAction({
+            items: items.map((i) => ({ productId: i.productId, qty: i.qty })),
+            pickupAt: slot,
+            notes: notes.trim() || undefined,
+          }),
+        {
+          loading: "Placing your order…",
+          success: "Order placed",
+          successDescription: "We’re assigning it to a butcher now. You’ll get an update at every step.",
+        },
+      );
+      if (!res) return;
       if (!res.ok) {
         setError(res.message);
-        router.refresh(); // refresh slot capacity
+        router.refresh(); // pick up the latest slot capacity and stock
         return;
       }
       clear();
-      toast.success("Order placed!", { description: "We're assigning it to one of our butchers now." });
       router.push(`/orders/${res.data!.orderId}?placed=1`);
     });
   }
@@ -78,9 +104,9 @@ export function CheckoutForm({
   return (
     <div className="mt-8 grid items-start gap-6 lg:grid-cols-[1fr_380px]">
       <div className="space-y-6">
-        <section className="rounded-xl border bg-card p-5 sm:p-6" aria-labelledby="pickup-heading">
-          <h2 id="pickup-heading" className="font-semibold">
-            1. Pickup time
+        <section className="rounded-2xl border bg-card p-5 sm:p-6" aria-labelledby="pickup-heading">
+          <h2 id="pickup-heading" className="flex items-center gap-2.5 text-base">
+            <StepNo n={1} />Pickup time
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Each slot has limited capacity so your order is ready without a crowd.
@@ -150,8 +176,8 @@ export function CheckoutForm({
           )}
         </section>
 
-        <section className="rounded-xl border bg-card p-5 sm:p-6">
-          <h2 className="font-semibold">2. Notes for the butcher</h2>
+        <section className="rounded-2xl border bg-card p-5 sm:p-6">
+          <h2 className="flex items-center gap-2.5 text-base"><StepNo n={2} />Notes for the butcher</h2>
           <Label htmlFor="notes" className="sr-only">
             Notes
           </Label>
@@ -166,8 +192,8 @@ export function CheckoutForm({
           <p className="mt-1.5 text-right text-xs text-muted-foreground">{notes.length}/300</p>
         </section>
 
-        <section className="rounded-xl border bg-card p-5 sm:p-6">
-          <h2 className="font-semibold">3. Payment</h2>
+        <section className="rounded-2xl border bg-card p-5 sm:p-6">
+          <h2 className="flex items-center gap-2.5 text-base"><StepNo n={3} />Payment</h2>
           <div className="mt-3 flex items-start gap-3 rounded-lg border bg-muted/40 p-4">
             <Store className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
             <div className="text-sm">
@@ -187,39 +213,34 @@ export function CheckoutForm({
         </section>
       </div>
 
-      <aside className="rounded-xl border bg-card p-5 lg:sticky lg:top-24">
-        <h2 className="font-semibold">Your order</h2>
-        <ul className="mt-4 space-y-3 text-sm">
-          {items.map((i) => (
-            <li key={i.productId} className="flex justify-between gap-3">
-              <span>
-                {i.name}
-                <span className="num block text-muted-foreground">{formatQty(i.qty, i.unit)}</span>
-              </span>
-              <span className="num">{formatPeso(lineEstimate(i.price, i.qty))}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="mt-4 flex items-baseline justify-between border-t pt-4">
-          <span className="font-medium">Estimated total</span>
-          <span className="num text-xl font-semibold">{formatPeso(subtotal)}</span>
-        </div>
-        {chosen && (
-          <p className="mt-3 rounded-lg bg-primary/5 px-3 py-2 text-sm">
-            Pickup <span className="font-medium">{day?.label}</span>, <span className="num">{chosen.label}</span>
-          </p>
-        )}
+      <aside className="lg:sticky lg:top-28">
+        <Ticket
+          heading="Order summary"
+          meta={`${items.length} item${items.length === 1 ? "" : "s"}`}
+          lines={[
+            ...items.map((i) => ({ label: `${i.name} · ${formatQty(i.qty, i.unit)}`, value: formatPeso(lineEstimate(i.price, i.qty)) })),
+            { label: "Pickup", value: chosen ? `${day?.label}, ${chosen.label}` : "Not chosen yet", muted: !chosen },
+          ]}
+          total={{ label: "Estimate", value: formatPeso(subtotal) }}
+          footnote="You pay the weighed amount at the counter."
+        />
         <div className="mt-4">
           <FormAlert state={error ? { ok: false, message: error } : null} />
         </div>
-        <Button size="lg" className="mt-4 w-full" onClick={submit} disabled={pending || !ready || days.length === 0}>
+        <Button size="lg" className="mt-4 h-11 w-full text-[15px]" onClick={submit} disabled={pending || !ready || days.length === 0}>
           {pending ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-4" />}
-          {pending ? "Placing order…" : "Place order"}
+          {pending ? "Placing order…" : "Review and place order"}
         </Button>
-        <p className="mt-3 text-center text-xs text-muted-foreground">
-          You can cancel free of charge until we start preparing it.
-        </p>
+        <p className="mt-3 text-center text-xs text-muted-foreground">Free cancellation until we start preparing it.</p>
       </aside>
     </div>
+  );
+}
+
+function StepNo({ n }: { n: number }) {
+  return (
+    <span className="grid size-6 place-items-center rounded-full bg-primary font-mono text-xs font-semibold text-primary-foreground" aria-hidden>
+      {n}
+    </span>
   );
 }

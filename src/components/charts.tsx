@@ -4,7 +4,7 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { formatPeso } from "@/lib/format";
 
 /** Validated single-series mark color (oxblood, passes contrast vs the card surface). */
-const SERIES = "#9b2c2c";
+const SERIES = "#c02a5e";
 const GRID = "oklch(0.912 0.007 70)";
 const AXIS_TEXT = "oklch(0.5 0.014 50)";
 

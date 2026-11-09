@@ -14,14 +14,14 @@ export function TransactionsTable({ txns, orderHref }: { txns: StockTxnView[]; o
     <div className="overflow-x-auto">
       <table className="w-full min-w-[820px] text-sm">
         <thead>
-          <tr className="border-b text-left text-xs text-muted-foreground">
-            <th className="px-5 py-3 font-medium">When</th>
-            <th className="px-3 py-3 font-medium">Product</th>
-            <th className="px-3 py-3 font-medium">Type</th>
-            <th className="px-3 py-3 text-right font-medium">Change</th>
-            <th className="px-3 py-3 text-right font-medium">Balance</th>
-            <th className="px-3 py-3 font-medium">Details</th>
-            <th className="px-5 py-3 font-medium">By</th>
+          <tr className="border-b bg-muted/50 text-left text-[11px] tracking-wider text-muted-foreground uppercase">
+            <th className="px-5 py-3 font-semibold">When</th>
+            <th className="px-3 py-3 font-semibold">Product</th>
+            <th className="px-3 py-3 font-semibold">Type</th>
+            <th className="px-3 py-3 text-right font-semibold">Change</th>
+            <th className="px-3 py-3 text-right font-semibold">Balance</th>
+            <th className="px-3 py-3 font-semibold">Details</th>
+            <th className="px-5 py-3 font-semibold">By</th>
           </tr>
         </thead>
         <tbody className="divide-y">

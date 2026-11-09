@@ -60,6 +60,20 @@ const PRODUCTS: Seed[] = [
     description: "Neck and back bones with some meat left on — the secret to rich bulalo-style soups, nilaga and ramen broth." },
 ];
 
+/** Product photos supplied by the shop, prepared by scripts/process-images.mjs (public/products/hd). */
+const PHOTOS: Record<string, string> = {
+  "pork-leg": "/products/hd/pork-leg.webp",
+  "pork-ribs": "/products/hd/pork-ribs.webp",
+  "pork-belly": "/products/hd/pork-belly.webp",
+  "pork-shoulder": "/products/hd/pork-shoulder.webp",
+  "pork-loin": "/products/hd/pork-loin.webp",
+  "pork-hock-feet": "/products/hd/pork-hock-feet.webp",
+  "pork-giniling": "/products/hd/pork-giniling.webp",
+  "pork-head": "/products/hd/pork-head.webp",
+  "pork-fat": "/products/hd/pork-fat.webp",
+  "pork-bones": "/products/hd/pork-bones.webp",
+};
+
 const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
 /** Manila wall-clock time `daysAgo` days back at hour:minute → UTC Date. */
@@ -145,6 +159,7 @@ async function main() {
           sku: p.sku,
           slug: slugify(p.name),
           name: p.name,
+          imageUrl: PHOTOS[slugify(p.name)] ?? null,
           localName: p.localName,
           description: p.description,
           category: p.category,

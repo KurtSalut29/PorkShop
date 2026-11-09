@@ -23,13 +23,13 @@ export default async function WorkerHistoryPage() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-sm">
               <thead>
-                <tr className="border-b text-left text-xs text-muted-foreground">
-                  <th className="px-5 py-3 font-medium">Order</th>
-                  <th className="px-3 py-3 font-medium">Customer</th>
-                  <th className="px-3 py-3 font-medium">Items</th>
-                  <th className="px-3 py-3 font-medium">Status</th>
-                  <th className="px-3 py-3 font-medium">Finished</th>
-                  <th className="px-5 py-3 text-right font-medium">Total</th>
+                <tr className="border-b bg-muted/50 text-left text-[11px] tracking-wider text-muted-foreground uppercase">
+                  <th className="px-5 py-3 font-semibold">Order</th>
+                  <th className="px-3 py-3 font-semibold">Customer</th>
+                  <th className="px-3 py-3 font-semibold">Items</th>
+                  <th className="px-3 py-3 font-semibold">Status</th>
+                  <th className="px-3 py-3 font-semibold">Finished</th>
+                  <th className="px-5 py-3 text-right font-semibold">Total</th>
                 </tr>
               </thead>
               <tbody className="divide-y">

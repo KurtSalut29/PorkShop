@@ -140,11 +140,42 @@ Every write calls `pg_notify` *inside its transaction*, so PostgreSQL delivers t
 | Tests | Vitest (unit), tsx integration stress test |
 
 ### Design system
-- **Colors:** warm stone neutrals with a deep **oxblood** primary. Errors use a separate, brighter red so they never read as brand color.
-- **Typography:** Inter, with tabular numbers for every price, weight and count.
-- **Spacing and controls:** 4/8-px spacing and 36–40 px controls, sized so workers can tap them on tablets.
+The look comes from the Porkshop logo and the butcher counter:
+
+| Token | Value | Used for |
+|---|---|---|
+| Night | `#10162A` | The logo's navy: console sidebar, hero, price board, footer |
+| Raspberry | `#C02A5E` | Primary actions (white text contrast 5.6:1) |
+| Neon | `#FF6A9B` | Highlights on Night only (6.7:1) |
+| Sky | `#4F7BE8` | Secondary accent and second chart series |
+| Tile | `#F5F6F8` | Page background |
+| Ticket | `#FBF3DA` | Scale-ticket paper for prices and totals |
+
+- **Typography:** Archivo (wide, sign-style) for headings and product labels, Instrument Sans for interface text, IBM Plex Mono for prices, weights and order codes.
+- **Signature, the scale ticket:** prices, cart and order totals, and confirmation summaries look like a meat scale's printed label, with perforated edges, mono figures and dotted leaders. The worker's weighing step looks like a scale's digital display.
 - **Status colors** are consistent everywhere (queue amber, assigned sky, preparing violet, ready emerald, cancelled red) and always paired with a text label.
+- **Scrollbars:** slim navy pills that match the sidebar.
+- **Reduced motion:** all animation is disabled when the operating system asks for it.
 - All money is in ₱ and all times are Asia/Manila.
+
+### Feedback and confirmations
+- **One feedback channel:** toasts at the top centre. Every action shows a loading state that becomes a success or an error explaining what to do next. Network failures, lost live updates and going offline are reported too.
+- **Field errors:** forms also highlight the specific fields that need fixing.
+- **Confirmations:** every change asks first, through one shared dialog: saving, deleting or archiving, status changes, payments, stock movements, settings, and sign-out. The dialog summarizes what will change; for example, a product edit lists before and after values.
+- **Not confirmed:** browsing, searching and adding to the cart. Adding to the cart offers **Undo** instead.
+
+### Images
+Product photos and the logo are prepared by a script:
+
+```bash
+node scripts/process-images.mjs
+```
+
+- **Logo:** the script removes the logo's navy background (`public/brand/porkshop-logo.png`, plus the app icons) while keeping the badge's interior and its neon glow.
+- **Product photos:** it upscales each photo to at least 1200 px (`public/products/hd/`).
+- **Display style:** the app detects whether each photo is a white-background cut-out (blended onto a tinted tile) or a photo with its own background (shown full-bleed).
+
+> The supplied product photos are only 225–640 px. Upscaling makes them render cleanly but can't add real detail. For true HD, replace the files in `public/products/` with originals of 1200 px or larger and re-run the script.
 
 ### Project layout
 ```

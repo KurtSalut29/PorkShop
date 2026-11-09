@@ -19,7 +19,7 @@ export default async function WorkerProductsPage() {
         {products.map((p) => (
           <article key={p.id} className="flex gap-4 rounded-xl border bg-card p-4 shadow-xs">
             <div className="w-24 shrink-0">
-              <ProductArt category={p.category} name={p.name} imageUrl={p.imageUrl} size="sm" />
+              <ProductArt category={p.category} name={p.name} label={p.localName} imageUrl={p.imageUrl} imageStyle={p.imageStyle} size="sm" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-2">

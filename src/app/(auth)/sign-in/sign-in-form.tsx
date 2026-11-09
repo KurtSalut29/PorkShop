@@ -3,6 +3,8 @@
 import { useLayoutEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { NETWORK_ERROR, notify } from "@/components/feedback/notify";
 import { authClient } from "@/lib/auth-client";
 import { signInSchema } from "@/lib/validation";
 import { Field, FormAlert } from "@/components/form";
@@ -46,21 +48,38 @@ export function SignInForm() {
     setFormError(null);
     const parsed = signInSchema.safeParse({ email, password });
     if (!parsed.success) {
-      setErrors(Object.fromEntries(parsed.error.issues.map((i) => [String(i.path[0]), i.message])));
+      const fieldMap = Object.fromEntries(parsed.error.issues.map((i) => [String(i.path[0]), i.message]));
+      setErrors(fieldMap);
+      notify.error("Check your sign-in details", Object.values(fieldMap)[0]);
       return;
     }
     setErrors({});
     setPending(true);
-    const { error } = await authClient.signIn.email({ ...parsed.data, rememberMe: remember });
-    if (error) {
+    const id = toast.loading("Signing you in…");
+    let result: Awaited<ReturnType<typeof authClient.signIn.email>>;
+    try {
+      result = await authClient.signIn.email({ ...parsed.data, rememberMe: remember });
+    } catch {
       setPending(false);
-      setFormError(
-        error.status === 401 || error.code === "INVALID_EMAIL_OR_PASSWORD"
-          ? "That email and password don't match. Please try again."
-          : (error.message ?? "We couldn't sign you in. Please try again."),
-      );
+      toast.error(NETWORK_ERROR.title, { id, description: NETWORK_ERROR.description });
       return;
     }
+    const { data, error } = result;
+    if (error) {
+      setPending(false);
+      const wrongCredentials = error.status === 401 || error.code === "INVALID_EMAIL_OR_PASSWORD";
+      if (wrongCredentials) setErrors({ password: "Incorrect email or password." });
+      setFormError(wrongCredentials ? null : (error.message ?? null));
+      toast.error(wrongCredentials ? "Incorrect email or password" : "Couldn’t sign you in", {
+        id,
+        description: wrongCredentials
+          ? "Check for typos and try again. Passwords are case-sensitive."
+          : (error.message ?? "Please try again in a moment."),
+        duration: 7000,
+      });
+      return;
+    }
+    toast.success(`Welcome back, ${data?.user.name.split(" ")[0] ?? "there"}`, { id, description: "You're signed in." });
     // Only allow same-site relative redirects.
     const target = next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
     router.push(target);

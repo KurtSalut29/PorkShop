@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { CalendarClock, Scale, Store } from "lucide-react";
 import { Logo } from "@/components/brand";
 import { CartButton } from "@/components/cart/cart-button";
 import { CartProvider } from "@/components/cart/cart-context";
@@ -11,7 +12,23 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { UserMenu } from "@/components/user-menu";
 import { homeFor } from "@/lib/constants";
 import { getCurrentUser } from "@/server/dal";
+import { getSettings } from "@/server/settings";
 import { MobileStoreNav, StoreNav } from "./store-nav";
+
+function to12h(hm: string) {
+  const [h, m] = hm.split(":").map(Number);
+  const hour = (h ?? 0) % 12 === 0 ? 12 : (h ?? 0) % 12;
+  return `${hour}${m ? `:${String(m).padStart(2, "0")}` : ""} ${(h ?? 0) < 12 ? "AM" : "PM"}`;
+}
+
+async function ShopHours() {
+  const s = await getSettings();
+  return (
+    <>
+      Open daily {to12h(s.openTime)} – {to12h(s.closeTime)}
+    </>
+  );
+}
 
 async function HeaderAccount() {
   const user = await getCurrentUser();
@@ -46,8 +63,29 @@ export default function StoreLayout({ children }: LayoutProps<"/">) {
   return (
     <CartProvider>
       <RealtimeListener />
+      <div className="bg-night text-[13px] text-white/75">
+        <Container className="flex h-9 items-center justify-center gap-x-6 sm:justify-between">
+          <span className="flex items-center gap-2">
+            <span className="live-dot size-1.5 rounded-full bg-emerald-400" aria-hidden />
+            <Suspense fallback="Open daily">
+              <ShopHours />
+            </Suspense>
+          </span>
+          <span className="hidden items-center gap-5 sm:flex">
+            <span className="flex items-center gap-1.5">
+              <Store className="size-3.5" /> Pickup only
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Scale className="size-3.5" /> Priced by actual weight
+            </span>
+            <span className="flex items-center gap-1.5">
+              <CalendarClock className="size-3.5" /> Pay at the counter
+            </span>
+          </span>
+        </Container>
+      </div>
       <header className="sticky top-0 z-30 border-b bg-background/85 backdrop-blur-md">
-        <Container className="flex h-16 items-center gap-6">
+        <Container className="flex h-16 items-center gap-8">
           <Logo href="/" />
           <StoreNav />
           <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
@@ -62,23 +100,27 @@ export default function StoreLayout({ children }: LayoutProps<"/">) {
       <main id="main" className="flex-1">
         {children}
       </main>
-      <footer className="mt-16 border-t bg-card">
-        <Container className="grid gap-8 py-10 text-sm sm:grid-cols-3">
+      <footer className="mt-20 bg-night text-white/70">
+        <Container className="grid gap-10 py-12 text-sm sm:grid-cols-[1.4fr_1fr_1fr]">
           <div>
-            <Logo href="/" />
-            <p className="mt-3 max-w-xs text-muted-foreground">
-              Fresh pork from trusted local farms, cut to order and ready for pickup.
+            <Logo href="/" inverted />
+            <p className="mt-4 max-w-xs leading-relaxed">
+              Fresh pork from trusted local farms, cut to order and weighed in front of you.
             </p>
           </div>
           <div>
-            <p className="font-medium">Store hours</p>
-            <p className="mt-2 text-muted-foreground">Monday – Sunday</p>
-            <p className="text-muted-foreground">7:00 AM – 6:00 PM</p>
+            <p className="text-[11px] font-semibold tracking-[0.16em] text-white uppercase">Store hours</p>
+            <p className="mt-3">Monday to Sunday</p>
+            <p>
+              <Suspense fallback="Open daily">
+                <ShopHours />
+              </Suspense>
+            </p>
           </div>
           <div>
-            <p className="font-medium">How pickup works</p>
-            <p className="mt-2 text-muted-foreground">
-              Choose a time at checkout. We’ll notify you when your order is packed. Pay by cash, GCash or card at the
+            <p className="text-[11px] font-semibold tracking-[0.16em] text-white uppercase">Pickup</p>
+            <p className="mt-3 leading-relaxed">
+              Choose a time at checkout and we’ll notify you when your order is packed. Pay by cash, GCash or card at the
               counter.
             </p>
           </div>

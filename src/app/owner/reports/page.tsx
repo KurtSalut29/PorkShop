@@ -103,10 +103,10 @@ async function SalesTab({ range }: { range: Range }) {
           <div className="max-h-80 overflow-y-auto">
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-card">
-                <tr className="border-b text-left text-xs text-muted-foreground">
-                  <th className="px-5 py-2 font-medium">Date</th>
-                  <th className="px-3 py-2 text-right font-medium">Orders</th>
-                  <th className="px-5 py-2 text-right font-medium">Revenue</th>
+                <tr className="border-b bg-muted/50 text-left text-[11px] tracking-wider text-muted-foreground uppercase">
+                  <th className="px-5 py-2 font-semibold">Date</th>
+                  <th className="px-3 py-2 text-right font-semibold">Orders</th>
+                  <th className="px-5 py-2 text-right font-semibold">Revenue</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -134,11 +134,11 @@ async function SalesTab({ range }: { range: Range }) {
               </div>
               <table className="w-full border-t text-sm">
                 <thead>
-                  <tr className="border-b text-left text-xs text-muted-foreground">
-                    <th className="px-5 py-2 font-medium">Product</th>
-                    <th className="px-3 py-2 text-right font-medium">Sold</th>
-                    <th className="px-3 py-2 text-right font-medium">Orders</th>
-                    <th className="px-5 py-2 text-right font-medium">Revenue</th>
+                  <tr className="border-b bg-muted/50 text-left text-[11px] tracking-wider text-muted-foreground uppercase">
+                    <th className="px-5 py-2 font-semibold">Product</th>
+                    <th className="px-3 py-2 text-right font-semibold">Sold</th>
+                    <th className="px-3 py-2 text-right font-semibold">Orders</th>
+                    <th className="px-5 py-2 text-right font-semibold">Revenue</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -168,7 +168,7 @@ async function SalesTab({ range }: { range: Range }) {
                   </div>
                   <div className="mt-2 flex items-center gap-3">
                     <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                      <div className="h-full rounded-full bg-[#9b2c2c]" style={{ width: `${pct}%` }} />
+                      <div className="h-full rounded-full bg-[#c02a5e]" style={{ width: `${pct}%` }} />
                     </div>
                     <span className="num w-24 text-right text-xs text-muted-foreground">
                       {pct.toFixed(0)}% · {m.orders} orders
@@ -198,15 +198,15 @@ async function MovementsTab({ range }: { range: Range }) {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[860px] text-sm">
             <thead>
-              <tr className="border-b text-left text-xs text-muted-foreground">
-                <th className="px-5 py-3 font-medium">Product</th>
-                <th className="px-3 py-3 text-right font-medium">Stock in</th>
-                <th className="px-3 py-3 text-right font-medium">Withdrawn</th>
-                <th className="px-3 py-3 text-right font-medium">Returned</th>
-                <th className="px-3 py-3 text-right font-medium">Spoiled</th>
-                <th className="px-3 py-3 text-right font-medium">Corrections</th>
-                <th className="px-3 py-3 text-right font-medium">On hand now</th>
-                <th className="px-5 py-3 text-right font-medium">Spoilage cost</th>
+              <tr className="border-b bg-muted/50 text-left text-[11px] tracking-wider text-muted-foreground uppercase">
+                <th className="px-5 py-3 font-semibold">Product</th>
+                <th className="px-3 py-3 text-right font-semibold">Stock in</th>
+                <th className="px-3 py-3 text-right font-semibold">Withdrawn</th>
+                <th className="px-3 py-3 text-right font-semibold">Returned</th>
+                <th className="px-3 py-3 text-right font-semibold">Spoiled</th>
+                <th className="px-3 py-3 text-right font-semibold">Corrections</th>
+                <th className="px-3 py-3 text-right font-semibold">On hand now</th>
+                <th className="px-5 py-3 text-right font-semibold">Spoilage cost</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -245,14 +245,14 @@ async function InventoryTab() {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px] text-sm">
             <thead>
-              <tr className="border-b text-left text-xs text-muted-foreground">
-                <th className="px-5 py-3 font-medium">Product</th>
-                <th className="px-3 py-3 font-medium">Status</th>
-                <th className="px-3 py-3 text-right font-medium">On hand</th>
-                <th className="px-3 py-3 text-right font-medium">Reserved</th>
-                <th className="px-3 py-3 text-right font-medium">Available</th>
-                <th className="px-3 py-3 text-right font-medium">Price</th>
-                <th className="px-5 py-3 text-right font-medium">Value</th>
+              <tr className="border-b bg-muted/50 text-left text-[11px] tracking-wider text-muted-foreground uppercase">
+                <th className="px-5 py-3 font-semibold">Product</th>
+                <th className="px-3 py-3 font-semibold">Status</th>
+                <th className="px-3 py-3 text-right font-semibold">On hand</th>
+                <th className="px-3 py-3 text-right font-semibold">Reserved</th>
+                <th className="px-3 py-3 text-right font-semibold">Available</th>
+                <th className="px-3 py-3 text-right font-semibold">Price</th>
+                <th className="px-5 py-3 text-right font-semibold">Value</th>
               </tr>
             </thead>
             <tbody className="divide-y">

@@ -4,6 +4,7 @@ import { useLayoutEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { NETWORK_ERROR, notify } from "@/components/feedback/notify";
 import { authClient } from "@/lib/auth-client";
 import { signUpSchema } from "@/lib/validation";
 import { Field, FormAlert } from "@/components/form";
@@ -45,22 +46,45 @@ export function SignUpForm() {
       const next: Record<string, string> = {};
       for (const issue of parsed.error.issues) next[String(issue.path[0])] ??= issue.message;
       setErrors(next);
+      const count = Object.keys(next).length;
+      notify.error(
+        count > 1 ? `${count} fields need your attention` : "One field needs your attention",
+        `${Object.values(next)[0]} The fields are highlighted below.`,
+      );
       return;
     }
     setErrors({});
     setPending(true);
     const { name, email, phone, password } = parsed.data;
-    const { error } = await authClient.signUp.email({ name, email, password, phone });
+    const id = toast.loading("Creating your account…");
+    let error: { code?: string; message?: string } | null = null;
+    try {
+      ({ error } = await authClient.signUp.email({ name, email, password, phone }));
+    } catch {
+      setPending(false);
+      toast.error(NETWORK_ERROR.title, { id, description: NETWORK_ERROR.description });
+      return;
+    }
     if (error) {
       setPending(false);
       if (error.code === "USER_ALREADY_EXISTS" || error.code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL") {
-        setErrors({ email: "An account with this email already exists. Try signing in instead." });
+        setErrors({ email: "An account with this email already exists." });
+        toast.error("That email is already registered", {
+          id,
+          description: "Sign in instead, or use a different email address.",
+          action: { label: "Sign in", onClick: () => router.push("/sign-in") },
+          duration: 8000,
+        });
       } else {
-        setFormError(error.message ?? "We couldn't create your account. Please try again.");
+        setFormError(error.message ?? "We couldn’t create your account.");
+        toast.error("Couldn’t create your account", { id, description: error.message ?? "Please try again in a moment." });
       }
       return;
     }
-    toast.success(`Welcome to Porkshop, ${name.split(" ")[0]}!`, { description: "Your account is ready. Start browsing fresh cuts." });
+    toast.success(`Welcome to Porkshop, ${name.split(" ")[0]}!`, {
+      id,
+      description: "Your account is ready. Start browsing today’s cuts.",
+    });
     router.push("/shop");
     router.refresh();
   }

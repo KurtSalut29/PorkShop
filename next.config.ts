@@ -6,7 +6,9 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   // pg / Prisma driver adapter must run as native Node modules, not bundled.
-  serverExternalPackages: ["pg", "@prisma/adapter-pg"],
+  serverExternalPackages: ["pg", "@prisma/adapter-pg", "sharp"],
+  // Allow a higher quality tier for photos and the logo (default only permits 75).
+  images: { qualities: [75, 90] },
   turbopack: {
     root: path.resolve("."),
     rules: {

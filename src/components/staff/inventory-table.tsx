@@ -20,17 +20,17 @@ export function InventoryTable({
     <div className="overflow-x-auto">
       <table className="w-full min-w-[760px] text-sm">
         <thead>
-          <tr className="border-b text-left text-xs text-muted-foreground">
-            <th className="px-5 py-3 font-medium">Product</th>
-            <th className="px-3 py-3 font-medium">Status</th>
-            <th className="px-3 py-3 text-right font-medium">On hand</th>
-            <th className="px-3 py-3 text-right font-medium">Reserved</th>
-            <th className="px-3 py-3 text-right font-medium">Available</th>
-            <th className="w-40 px-3 py-3 font-medium">
+          <tr className="border-b bg-muted/50 text-left text-[11px] tracking-wider text-muted-foreground uppercase">
+            <th className="px-5 py-3 font-semibold">Product</th>
+            <th className="px-3 py-3 font-semibold">Status</th>
+            <th className="px-3 py-3 text-right font-semibold">On hand</th>
+            <th className="px-3 py-3 text-right font-semibold">Reserved</th>
+            <th className="px-3 py-3 text-right font-semibold">Available</th>
+            <th className="w-40 px-3 py-3 font-semibold">
               <span className="sr-only">Availability</span>
             </th>
-            {showValue && <th className="px-3 py-3 text-right font-medium">Stock value</th>}
-            {actions && <th className="px-5 py-3 text-right font-medium">Actions</th>}
+            {showValue && <th className="px-3 py-3 text-right font-semibold">Stock value</th>}
+            {actions && <th className="px-5 py-3 text-right font-semibold">Actions</th>}
           </tr>
         </thead>
         <tbody className="divide-y">

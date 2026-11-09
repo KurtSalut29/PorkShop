@@ -1,35 +1,75 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { saveProductAction } from "@/app/actions/admin";
-import { errorFor, Field, FormAlert, SubmitButton } from "@/components/form";
+import { useConfirmedFormAction } from "@/components/feedback/confirm";
+import { errorFor, Field, SubmitButton } from "@/components/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { CATEGORY_LABEL, type ProductCategory } from "@/lib/constants";
+import { formatPeso } from "@/lib/format";
 import type { ProductView } from "@/server/queries/catalog";
 
 export function ProductForm({ product }: { product?: ProductView }) {
   const router = useRouter();
-  const [state, action] = useActionState(saveProductAction.bind(null, product?.id ?? null), null);
   const [unit, setUnit] = useState<"KG" | "PIECE">(product?.unit ?? "KG");
   const [category, setCategory] = useState<ProductCategory>(product?.category ?? "PRIME_CUTS");
-  const fe = state && !state.ok ? state.fieldErrors : undefined;
   const u = unit === "KG" ? "kg" : "pc";
 
-  useEffect(() => {
-    if (state?.ok) {
-      toast.success(state.message);
+  const { onSubmit, pending, fieldErrors: fe } = useConfirmedFormAction(saveProductAction.bind(null, product?.id ?? null), {
+    loading: product ? "Saving changes…" : "Creating product…",
+    confirm: (fd) => {
+      const v = (k: string) => String(fd.get(k) ?? "").trim();
+      const price = Number(v("price"));
+      if (!product) {
+        return {
+          title: `Create ${v("name") || "this product"}?`,
+          description: "It appears in the catalog right away with zero stock. Record a delivery to make it orderable.",
+          details: [
+            { label: "Category", value: CATEGORY_LABEL[v("category") as ProductCategory] ?? "—" },
+            { label: "Price", value: Number.isFinite(price) && price > 0 ? `${formatPeso(price)} / ${u}` : "—" },
+            { label: "SKU", value: v("sku").toUpperCase() || "—" },
+          ],
+          confirmLabel: "Create product",
+        };
+      }
+      const changes: { label: string; value: string }[] = [];
+      const cmp = (label: string, before: string | number | null | undefined, after: string, fmt = (x: string) => x) => {
+        if (String(before ?? "") !== after) changes.push({ label, value: `${fmt(String(before ?? "—")) || "—"} → ${fmt(after) || "—"}` });
+      };
+      cmp("Name", product.name, v("name"));
+      cmp("Local name", product.localName, v("localName"));
+      cmp("SKU", product.sku, v("sku").toUpperCase());
+      cmp("Category", CATEGORY_LABEL[product.category], CATEGORY_LABEL[v("category") as ProductCategory] ?? "");
+      if (Number(v("price")) !== product.price) changes.push({ label: "Price", value: `${formatPeso(product.price)} → ${Number.isFinite(price) ? formatPeso(price) : v("price")}` });
+      if (Number(v("lowStockThreshold")) !== product.lowStockThreshold) changes.push({ label: "Low-stock alert", value: `${product.lowStockThreshold} → ${v("lowStockThreshold")} ${u}` });
+      if (Number(v("minOrderQty")) !== product.minOrderQty) changes.push({ label: "Minimum order", value: `${product.minOrderQty} → ${v("minOrderQty")} ${u}` });
+      if (Number(v("qtyStep")) !== product.qtyStep) changes.push({ label: "Quantity step", value: `${product.qtyStep} → ${v("qtyStep")} ${u}` });
+      if (v("description") !== product.description) changes.push({ label: "Description", value: "Updated" });
+      if (v("imageUrl") !== (product.imageUrl ?? "")) changes.push({ label: "Image", value: v("imageUrl") ? "Updated" : "Removed" });
+      const priceChanged = Number(v("price")) !== product.price;
+      return {
+        title: changes.length ? `Save ${changes.length} change${changes.length > 1 ? "s" : ""} to ${product.name}?` : "Save without changes?",
+        description: priceChanged
+          ? "The new price applies to new orders only. Orders already placed keep their original price. Price changes are recorded in the audit log."
+          : changes.length
+            ? "Changes appear in the catalog immediately."
+            : "Nothing has changed since you opened this product.",
+        details: changes,
+        confirmLabel: "Save changes",
+        tone: priceChanged ? "warning" : "default",
+      };
+    },
+    onSuccess: () => {
       if (!product) router.push("/owner/products");
-    }
-  }, [state, product, router]);
+    },
+  });
 
   return (
-    <form action={action} className="grid gap-6">
-      {state && !state.ok && <FormAlert state={state} />}
+    <form onSubmit={onSubmit} className="grid gap-6" noValidate>
       <section className="rounded-xl border bg-card shadow-xs">
         <header className="border-b px-5 py-4">
           <h2 className="font-semibold">Details</h2>
@@ -110,7 +150,7 @@ export function ProductForm({ product }: { product?: ProductView }) {
       </section>
 
       <div className="flex gap-2">
-        <SubmitButton>{product ? "Save changes" : "Create product"}</SubmitButton>
+        <SubmitButton pending={pending}>{product ? "Save changes" : "Create product"}</SubmitButton>
         <Button type="button" variant="ghost" onClick={() => router.push("/owner/products")}>
           Cancel
         </Button>

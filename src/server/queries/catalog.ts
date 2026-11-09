@@ -2,6 +2,7 @@ import "server-only";
 import type { Prisma, Product, ProductCategory } from "@/generated/prisma/client";
 import { stockLevel } from "@/lib/pricing";
 import { db } from "../db";
+import { withImageStyles, type ImageStyle } from "../image-style";
 
 export type ProductView = ReturnType<typeof toProductView>;
 
@@ -27,6 +28,8 @@ export function toProductView(p: Product) {
     minOrderQty: p.minOrderQty.toNumber(),
     qtyStep: p.qtyStep.toNumber(),
     imageUrl: p.imageUrl,
+    /** Filled in by withImageStyles(); "cutout" until measured. */
+    imageStyle: "cutout" as ImageStyle,
     archived: p.archived,
     level: stockLevel(available, lowStockThreshold),
     updatedAt: p.updatedAt.toISOString(),
@@ -49,25 +52,31 @@ export async function listCatalog(opts: { q?: string; category?: string; include
     ];
   }
   const products = await db.product.findMany({ where, orderBy: [{ name: "asc" }] });
-  return products
-    .map(toProductView)
-    .sort((a, b) => CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category) || a.name.localeCompare(b.name));
+  return withImageStyles(
+    products
+      .map(toProductView)
+      .sort((a, b) => CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category) || a.name.localeCompare(b.name)),
+  );
 }
 
 export async function getProductBySlug(slug: string) {
   const p = await db.product.findUnique({ where: { slug } });
-  return p && !p.archived ? toProductView(p) : null;
+  if (!p || p.archived) return null;
+  const [view] = await withImageStyles([toProductView(p)]);
+  return view!;
 }
 
 export async function getProductById(id: string) {
   const p = await db.product.findUnique({ where: { id } });
-  return p ? toProductView(p) : null;
+  if (!p) return null;
+  const [view] = await withImageStyles([toProductView(p)]);
+  return view!;
 }
 
 export async function getProductsByIds(ids: string[]) {
   if (ids.length === 0) return [];
   const products = await db.product.findMany({ where: { id: { in: ids } } });
-  return products.map(toProductView);
+  return withImageStyles(products.map(toProductView));
 }
 
 export async function listRelated(product: ProductView, take = 4) {
@@ -75,8 +84,10 @@ export async function listRelated(product: ProductView, take = 4) {
     where: { archived: false, id: { not: product.id } },
     orderBy: [{ category: "asc" }, { name: "asc" }],
   });
-  return products
-    .map(toProductView)
-    .sort((a, b) => Number(b.category === product.category) - Number(a.category === product.category))
-    .slice(0, take);
+  return withImageStyles(
+    products
+      .map(toProductView)
+      .sort((a, b) => Number(b.category === product.category) - Number(a.category === product.category))
+      .slice(0, take),
+  );
 }

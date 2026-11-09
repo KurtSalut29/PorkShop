@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, BellOff, CheckCheck, ClipboardList, Info } from "lucide-react";
 import { markNotificationsReadAction } from "@/app/actions/account";
+import { useConfirm } from "@/components/feedback/confirm";
+import { runAction } from "@/components/feedback/notify";
 import { EmptyState } from "@/components/page";
 import { Button } from "@/components/ui/button";
 import { formatDateTime } from "@/lib/format";
@@ -15,6 +17,7 @@ const ICON = { ORDER: ClipboardList, STOCK: AlertTriangle, SYSTEM: Info } as con
 
 export function NotificationsView({ items }: { items: NotificationView[] }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [pending, startTransition] = useTransition();
   const unread = items.filter((n) => !n.read).length;
 
@@ -33,7 +36,17 @@ export function NotificationsView({ items }: { items: NotificationView[] }) {
           variant="ghost"
           size="sm"
           disabled={!unread || pending}
-          onClick={() => startTransition(() => void markNotificationsReadAction())}
+          onClick={async () => {
+            const ok = await confirm({
+              title: `Mark all ${unread} as read?`,
+              description: "They’ll stay in your list, just without the unread highlight.",
+              confirmLabel: "Mark all as read",
+            });
+            if (!ok) return;
+            startTransition(async () => {
+              await runAction(() => markNotificationsReadAction(), { loading: "Updating…", success: "All caught up", successDescription: "Every notification is marked as read." });
+            });
+          }}
         >
           <CheckCheck className="size-4" /> Mark all as read
         </Button>

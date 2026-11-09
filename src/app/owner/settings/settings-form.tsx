@@ -1,9 +1,8 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
-import { toast } from "sonner";
 import { saveSettingsAction } from "@/app/actions/admin";
-import { errorFor, Field, FormAlert, SubmitButton } from "@/components/form";
+import { useConfirmedFormAction } from "@/components/feedback/confirm";
+import { errorFor, Field, SubmitButton } from "@/components/form";
 import { Input } from "@/components/ui/input";
 
 type Settings = {
@@ -18,16 +17,37 @@ type Settings = {
 };
 
 export function SettingsForm({ settings }: { settings: Settings }) {
-  const [state, action] = useActionState(saveSettingsAction, null);
-  const fe = state && !state.ok ? state.fieldErrors : undefined;
-  useEffect(() => {
-    if (state?.ok) toast.success(state.message);
-  }, [state]);
+  const { onSubmit, pending, fieldErrors: fe } = useConfirmedFormAction(saveSettingsAction, {
+    loading: "Saving settings…",
+    confirm: (fd) => {
+      const labels: Record<keyof Settings, string> = {
+        shopName: "Shop name",
+        openTime: "Opens at",
+        closeTime: "Closes at",
+        slotMinutes: "Slot length",
+        slotCapacity: "Orders per slot",
+        leadTimeMinutes: "Lead time",
+        advanceDays: "Booking window",
+        maxActiveOrdersPerWorker: "Orders per worker",
+      };
+      const changes = (Object.keys(labels) as (keyof Settings)[])
+        .filter((k) => String(fd.get(k) ?? "") !== String(settings[k]))
+        .map((k) => ({ label: labels[k], value: `${settings[k]} → ${String(fd.get(k) ?? "")}` }));
+      return {
+        title: changes.length ? `Save ${changes.length} setting change${changes.length > 1 ? "s" : ""}?` : "Save without changes?",
+        description: changes.length
+          ? "Pickup slots and automatic assignment use the new values immediately. Existing orders keep their pickup times."
+          : "Nothing has changed.",
+        details: changes,
+        confirmLabel: "Save settings",
+        tone: changes.length ? "warning" : "default",
+      };
+    },
+  });
 
   return (
-    <form action={action} className="grid max-w-4xl gap-6">
-      {state && !state.ok && <FormAlert state={state} />}
-      <section className="rounded-xl border bg-card shadow-xs">
+    <form onSubmit={onSubmit} className="grid max-w-4xl gap-6" noValidate>
+      <section className="rounded-2xl border bg-card shadow-[0_1px_2px_oklch(0.2_0.01_240/0.05)]">
         <header className="border-b px-5 py-4">
           <h2 className="font-semibold">Shop</h2>
         </header>
@@ -44,7 +64,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
         </div>
       </section>
 
-      <section className="rounded-xl border bg-card shadow-xs">
+      <section className="rounded-2xl border bg-card shadow-[0_1px_2px_oklch(0.2_0.01_240/0.05)]">
         <header className="border-b px-5 py-4">
           <h2 className="font-semibold">Pickup slots</h2>
           <p className="text-sm text-muted-foreground">Controls the time slots customers can book at checkout.</p>
@@ -65,7 +85,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
         </div>
       </section>
 
-      <section className="rounded-xl border bg-card shadow-xs">
+      <section className="rounded-2xl border bg-card shadow-[0_1px_2px_oklch(0.2_0.01_240/0.05)]">
         <header className="border-b px-5 py-4">
           <h2 className="font-semibold">Automatic assignment</h2>
           <p className="text-sm text-muted-foreground">
@@ -85,7 +105,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
       </section>
 
       <div>
-        <SubmitButton>Save settings</SubmitButton>
+        <SubmitButton pending={pending}>Save settings</SubmitButton>
       </div>
     </form>
   );

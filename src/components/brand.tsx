@@ -1,28 +1,36 @@
+import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import logo from "../../public/brand/porkshop-logo.png";
 
-export function LogoMark({ className }: { className?: string }) {
+/**
+ * The Porkshop emblem (chef pig badge) with a transparent background, so it sits cleanly on
+ * light and navy surfaces alike.
+ */
+export function LogoMark({ className, priority = false }: { className?: string; priority?: boolean }) {
   return (
-    <svg viewBox="0 0 32 32" aria-hidden="true" className={cn("size-8 shrink-0", className)}>
-      <rect width="32" height="32" rx="8" className="fill-primary" />
-      {/* Monogram P with a cleaver-notch — simple, legible at 16px */}
-      <path
-        d="M11 23.5V8.5h6.2c3.3 0 5.5 2 5.5 5s-2.2 5-5.5 5H14.6v5H11Zm3.6-8.1h2.4c1.4 0 2.2-.7 2.2-1.9s-.8-1.9-2.2-1.9h-2.4v3.8Z"
-        fill="white"
-      />
-      <path d="M22.5 21.5h3v2h-3z" fill="white" opacity=".7" />
-    </svg>
+    <Image
+      src={logo}
+      alt=""
+      aria-hidden
+      preload={priority}
+      sizes="(max-width: 640px) 96px, 160px"
+      quality={90}
+      className={cn("size-10 shrink-0 object-contain", className)}
+    />
   );
 }
 
-export function Logo({ href = "/", className, subtitle }: { href?: string; className?: string; subtitle?: string }) {
+export function Logo({ href = "/", className, inverted = false }: { href?: string; className?: string; inverted?: boolean }) {
   return (
-    <Link href={href} className={cn("flex items-center gap-2.5 rounded-md outline-offset-4", className)}>
-      <LogoMark />
-      <span className="flex flex-col leading-none">
-        <span className="text-[15px] font-semibold tracking-tight">Porkshop</span>
-        {subtitle && <span className="mt-1 text-[11px] font-medium text-muted-foreground">{subtitle}</span>}
-      </span>
+    <Link href={href} className={cn("flex items-center gap-2.5 rounded-md outline-offset-4", className)} aria-label="Porkshop home">
+      <LogoMark priority />
+      <span className={cn("display-wide text-[17px] leading-none", inverted ? "text-white" : "text-foreground")}>PORKSHOP</span>
     </Link>
   );
+}
+
+/** Full emblem for hero and sign-in panels. */
+export function LogoEmblem({ className }: { className?: string }) {
+  return <Image src={logo} alt="Porkshop" preload quality={90} sizes="(max-width: 768px) 160px, 260px" className={cn("h-auto drop-shadow-[0_10px_30px_oklch(0.74_0.17_355/0.25)]", className)} />;
 }

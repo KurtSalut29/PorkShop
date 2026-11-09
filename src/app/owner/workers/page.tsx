@@ -26,14 +26,14 @@ export default async function WorkersPage() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[820px] text-sm">
               <thead>
-                <tr className="border-b text-left text-xs text-muted-foreground">
-                  <th className="px-5 py-3 font-medium">Worker</th>
-                  <th className="px-3 py-3 font-medium">Mobile</th>
-                  <th className="px-3 py-3 font-medium">Status</th>
-                  <th className="px-3 py-3 text-right font-medium">Open orders</th>
-                  <th className="px-3 py-3 text-right font-medium">Capacity</th>
-                  <th className="px-3 py-3 text-right font-medium">Completed</th>
-                  <th className="px-3 py-3 font-medium">Since</th>
+                <tr className="border-b bg-muted/50 text-left text-[11px] tracking-wider text-muted-foreground uppercase">
+                  <th className="px-5 py-3 font-semibold">Worker</th>
+                  <th className="px-3 py-3 font-semibold">Mobile</th>
+                  <th className="px-3 py-3 font-semibold">Status</th>
+                  <th className="px-3 py-3 text-right font-semibold">Open orders</th>
+                  <th className="px-3 py-3 text-right font-semibold">Capacity</th>
+                  <th className="px-3 py-3 text-right font-semibold">Completed</th>
+                  <th className="px-3 py-3 font-semibold">Since</th>
                   <th className="px-5 py-3">
                     <span className="sr-only">Actions</span>
                   </th>

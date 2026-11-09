@@ -45,6 +45,7 @@ export function Field({
   );
 }
 
+/** Inline, persistent notice for states that outlive a toast (e.g. a blocked step). */
 export function FormAlert({ state }: { state: { ok: boolean; message?: string } | null | undefined }) {
   if (!state?.message) return null;
   return (
@@ -55,11 +56,7 @@ export function FormAlert({ state }: { state: { ok: boolean; message?: string } 
         state.ok ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-red-200 bg-red-50 text-red-900",
       )}
     >
-      {state.ok ? (
-        <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden />
-      ) : (
-        <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
-      )}
+      {state.ok ? <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden /> : <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />}
       <span>{state.message}</span>
     </div>
   );
@@ -72,6 +69,7 @@ export function SubmitButton({
   variant,
   size,
   disabled,
+  pending: pendingProp,
 }: {
   children: React.ReactNode;
   pendingLabel?: string;
@@ -79,10 +77,13 @@ export function SubmitButton({
   variant?: React.ComponentProps<typeof Button>["variant"];
   size?: React.ComponentProps<typeof Button>["size"];
   disabled?: boolean;
+  /** Pass when the form is submitted via onSubmit (useFormStatus only tracks form actions). */
+  pending?: boolean;
 }) {
-  const { pending } = useFormStatus();
+  const status = useFormStatus();
+  const pending = pendingProp ?? status.pending;
   return (
-    <Button type="submit" disabled={pending || disabled} className={className} variant={variant} size={size}>
+    <Button type="submit" disabled={pending || disabled} className={className} variant={variant} size={size} aria-busy={pending}>
       {pending && <Loader2 className="size-4 animate-spin" aria-hidden />}
       {pending ? (pendingLabel ?? "Saving…") : children}
     </Button>

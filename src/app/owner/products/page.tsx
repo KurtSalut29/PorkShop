@@ -61,13 +61,13 @@ export default async function OwnerProductsPage({ searchParams }: PageProps<"/ow
           <div className="overflow-x-auto">
             <table className="w-full min-w-[820px] text-sm">
               <thead>
-                <tr className="border-b text-left text-xs text-muted-foreground">
-                  <th className="px-5 py-3 font-medium">Product</th>
-                  <th className="px-3 py-3 font-medium">Category</th>
-                  <th className="px-3 py-3 text-right font-medium">Price</th>
-                  <th className="px-3 py-3 font-medium">Ordering</th>
-                  <th className="px-3 py-3 font-medium">Stock</th>
-                  <th className="px-5 py-3 text-right font-medium">Actions</th>
+                <tr className="border-b bg-muted/50 text-left text-[11px] tracking-wider text-muted-foreground uppercase">
+                  <th className="px-5 py-3 font-semibold">Product</th>
+                  <th className="px-3 py-3 font-semibold">Category</th>
+                  <th className="px-3 py-3 text-right font-semibold">Price</th>
+                  <th className="px-3 py-3 font-semibold">Ordering</th>
+                  <th className="px-3 py-3 font-semibold">Stock</th>
+                  <th className="px-5 py-3 text-right font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -76,7 +76,7 @@ export default async function OwnerProductsPage({ searchParams }: PageProps<"/ow
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
                         <div className="w-14 shrink-0">
-                          <ProductArt category={p.category} name={p.name} imageUrl={p.imageUrl} size="sm" className="rounded-md" />
+                          <ProductArt category={p.category} name={p.name} label={p.localName} imageUrl={p.imageUrl} imageStyle={p.imageStyle} size="sm" className="rounded-md" />
                         </div>
                         <div>
                           <p className="font-medium">{p.name}</p>

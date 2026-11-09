@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, UserRound, LayoutDashboard } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
-import { ROLE_LABEL, homeFor, type Role } from "@/lib/constants";
-import { initials } from "@/lib/format";
+import { LayoutDashboard, LogOut, UserRound } from "lucide-react";
+import { toast } from "sonner";
+import { useConfirm } from "@/components/feedback/confirm";
+import { NETWORK_ERROR } from "@/components/feedback/notify";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -15,6 +15,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { authClient } from "@/lib/auth-client";
+import { ROLE_LABEL, homeFor, type Role } from "@/lib/constants";
+import { initials } from "@/lib/format";
 
 export function UserMenu({
   name,
@@ -30,11 +33,30 @@ export function UserMenu({
   showDashboardLink?: boolean;
 }) {
   const router = useRouter();
+  const confirm = useConfirm();
 
   async function signOut() {
-    await authClient.signOut();
-    router.push("/sign-in");
-    router.refresh();
+    const ok = await confirm({
+      title: "Sign out of Porkshop?",
+      description:
+        role === "WORKER"
+          ? "Your duty status stays as it is. Switch to Off duty first if you're ending your shift, so your unstarted orders go to someone else."
+          : "You'll need your email and password to sign in again on this device.",
+      confirmLabel: "Sign out",
+      cancelLabel: "Stay signed in",
+      tone: role === "WORKER" ? "warning" : "default",
+    });
+    if (!ok) return;
+    const id = toast.loading("Signing you out…");
+    try {
+      const { error } = await authClient.signOut();
+      if (error) throw new Error(error.message);
+      toast.success("You're signed out", { id, description: "See you next time." });
+      router.push("/sign-in");
+      router.refresh();
+    } catch {
+      toast.error(NETWORK_ERROR.title, { id, description: "You're still signed in. Try again when you're back online." });
+    }
   }
 
   return (
@@ -44,7 +66,7 @@ export function UserMenu({
         aria-label="Account menu"
       >
         <Avatar className="size-8">
-          <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">{initials(name)}</AvatarFallback>
+          <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">{initials(name)}</AvatarFallback>
         </Avatar>
         <span className="hidden text-left leading-tight sm:block">
           <span className="block max-w-36 truncate text-sm font-medium">{name}</span>
@@ -70,7 +92,7 @@ export function UserMenu({
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={signOut} variant="destructive">
+        <DropdownMenuItem onSelect={() => void signOut()} variant="destructive">
           <LogOut /> Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>

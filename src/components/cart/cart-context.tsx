@@ -14,6 +14,9 @@ export type CartItem = {
   qty: number;
   minOrderQty: number;
   qtyStep: number;
+  imageUrl?: string | null;
+  imageStyle?: "cutout" | "photo";
+  localName?: string | null;
 };
 
 type CartContextValue = {

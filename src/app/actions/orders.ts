@@ -37,6 +37,9 @@ export async function refreshCartAction(ids: string[]) {
     qtyStep: p.qtyStep,
     archived: p.archived,
     category: p.category,
+    imageUrl: p.imageUrl,
+    imageStyle: p.imageStyle,
+    localName: p.localName,
   }));
 }
 

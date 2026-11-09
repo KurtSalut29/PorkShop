@@ -2,6 +2,7 @@ import { Check, CircleX } from "lucide-react";
 import { ORDER_STATUS, ORDER_STATUS_ORDER } from "@/lib/constants";
 import { formatDateTime, formatPeso, formatQty, formatTime, formatUnitPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { Ticket } from "@/components/ticket";
 import type { OrderDetail, OrderView } from "@/server/queries/orders";
 
 /** Visual tracker: Received → Assigned → Being prepared → Ready → Picked up. */
@@ -69,12 +70,12 @@ export function OrderItemsTable({ order }: { order: OrderView }) {
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b text-left text-xs text-muted-foreground">
-            <th className="px-5 py-2.5 font-medium">Product</th>
-            <th className="px-3 py-2.5 text-right font-medium">Ordered</th>
-            {weighed && <th className="px-3 py-2.5 text-right font-medium">Actual</th>}
-            <th className="px-3 py-2.5 text-right font-medium">Price</th>
-            <th className="px-5 py-2.5 text-right font-medium">Amount</th>
+          <tr className="border-b bg-muted/50 text-left text-[11px] tracking-wider text-muted-foreground uppercase">
+            <th className="px-5 py-2.5 font-semibold">Product</th>
+            <th className="px-3 py-2.5 text-right font-semibold">Ordered</th>
+            {weighed && <th className="px-3 py-2.5 text-right font-semibold">Actual</th>}
+            <th className="px-3 py-2.5 text-right font-semibold">Price</th>
+            <th className="px-5 py-2.5 text-right font-semibold">Amount</th>
           </tr>
         </thead>
         <tbody className="divide-y">
@@ -91,16 +92,17 @@ export function OrderItemsTable({ order }: { order: OrderView }) {
           ))}
         </tbody>
       </table>
-      <dl className="space-y-1.5 border-t px-5 py-4 text-sm">
-        <div className="flex justify-between text-muted-foreground">
-          <dt>Estimated total</dt>
-          <dd className={cn("num", order.finalTotal !== null && "line-through")}>{formatPeso(order.estimatedTotal)}</dd>
-        </div>
-        <div className="flex items-baseline justify-between">
-          <dt className="font-medium">{order.finalTotal !== null ? "Final total (actual weight)" : "Amount to pay at pickup"}</dt>
-          <dd className="num text-lg font-semibold">{formatPeso(order.total)}</dd>
-        </div>
-      </dl>
+      <div className="border-t bg-muted/30 p-4 sm:p-5">
+        <Ticket
+          className="sm:ml-auto sm:max-w-sm"
+          lines={[
+            { label: "Estimated", value: formatPeso(order.estimatedTotal), muted: order.finalTotal !== null, struck: order.finalTotal !== null },
+            ...(order.finalTotal !== null ? [{ label: "Weighed total", value: formatPeso(order.finalTotal) }] : []),
+          ]}
+          total={{ label: order.finalTotal !== null ? "Total" : "Pay at pickup", value: formatPeso(order.total) }}
+          footnote={order.finalTotal === null ? "Final amount is set when your cuts are weighed." : undefined}
+        />
+      </div>
     </div>
   );
 }

@@ -53,7 +53,10 @@ export const productSchema = z.object({
   lowStockThreshold: decimalField("Low-stock level", { allowZero: true }),
   minOrderQty: decimalField("Minimum order"),
   qtyStep: decimalField("Quantity step"),
-  imageUrl: z.url("Enter a valid image URL.").optional().or(z.literal("")),
+  imageUrl: z
+    .union([z.url(), z.string().regex(/^\/[\w\-./]+$/)], { error: "Use a full https:// link or a site path like /products/pork-belly.jpg." })
+    .optional()
+    .or(z.literal("")),
 });
 
 export const stockMovementSchema = z.object({

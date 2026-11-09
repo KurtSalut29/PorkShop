@@ -5,54 +5,69 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Porkshop design tokens
- * ─ Warm stone neutrals keep the interface calm and readable for long shifts.
- * ─ A deep oxblood primary gives a butcher-shop identity without shouting.
- * ─ Destructive red is brighter and more orange than the primary so errors never look like brand.
+ * Porkshop design tokens, taken from the Porkshop logo and the butcher counter
+ *   Night     #10162A  the logo's navy: console sidebar, price board, hero, footer
+ *   Raspberry #C02A5E  the logo's ribbon pink, deepened for contrast: primary actions
+ *   Neon      #FF6A9B  the logo's neon outline: highlights on Night only
+ *   Sky       #4F7BE8  the logo's blue ring: secondary accent, second chart series
+ *   Tile      #F5F6F8  cool white counter tile: page background
+ *   Ticket    #FBF3DA  scale-ticket paper: prices, totals, receipts
+ *   Scale     #3DDC97  scale display digits: live weights
+ * Errors use an orange-red (not pink) so they never read as brand.
  */
 :root {
-  --background: oklch(0.982 0.004 75);
-  --foreground: oklch(0.22 0.014 45);
+  --background: oklch(0.971 0.004 265);
+  --foreground: oklch(0.2 0.025 265);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.014 45);
+  --card-foreground: oklch(0.2 0.025 265);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.014 45);
-  --primary: oklch(0.43 0.135 22);
-  --primary-foreground: oklch(0.985 0.008 60);
-  --secondary: oklch(0.955 0.007 70);
-  --secondary-foreground: oklch(0.28 0.018 45);
-  --muted: oklch(0.958 0.006 75);
-  --muted-foreground: oklch(0.5 0.014 50);
-  --accent: oklch(0.955 0.016 30);
-  --accent-foreground: oklch(0.38 0.12 22);
-  --destructive: oklch(0.59 0.21 33);
-  --success: oklch(0.55 0.12 155);
-  --warning: oklch(0.72 0.15 70);
-  --border: oklch(0.912 0.007 70);
-  --input: oklch(0.88 0.009 70);
-  --ring: oklch(0.52 0.13 22);
-  --chart-1: oklch(0.45 0.14 22);
-  --chart-2: oklch(0.74 0.12 70);
+  --popover-foreground: oklch(0.2 0.025 265);
+  --primary: oklch(0.53 0.19 3);
+  --primary-foreground: oklch(0.99 0.004 80);
+  --secondary: oklch(0.948 0.006 265);
+  --secondary-foreground: oklch(0.27 0.03 265);
+  --muted: oklch(0.953 0.005 265);
+  --muted-foreground: oklch(0.49 0.02 265);
+  --accent: oklch(0.955 0.02 360);
+  --accent-foreground: oklch(0.45 0.17 3);
+  --destructive: oklch(0.585 0.215 32);
+  --success: oklch(0.56 0.12 158);
+  --warning: oklch(0.74 0.15 72);
+  --border: oklch(0.905 0.008 265);
+  --input: oklch(0.875 0.01 265);
+  --ring: oklch(0.6 0.17 3);
+  --chart-1: oklch(0.53 0.19 3);
+  --chart-2: oklch(0.6 0.16 265);
   --chart-3: oklch(0.6 0.08 160);
   --chart-4: oklch(0.56 0.08 250);
   --chart-5: oklch(0.68 0.06 40);
   --radius: 0.625rem;
-  --sidebar: oklch(0.972 0.006 70);
-  --sidebar-foreground: oklch(0.3 0.016 45);
-  --sidebar-primary: oklch(0.43 0.135 22);
-  --sidebar-primary-foreground: oklch(0.985 0.008 60);
-  --sidebar-accent: oklch(0.935 0.012 40);
-  --sidebar-accent-foreground: oklch(0.25 0.03 30);
-  --sidebar-border: oklch(0.912 0.007 70);
-  --sidebar-ring: oklch(0.52 0.13 22);
+
+  /* Steel console sidebar */
+  --sidebar: oklch(0.19 0.035 268);
+  --sidebar-foreground: oklch(0.83 0.02 268);
+  --sidebar-primary: oklch(0.74 0.17 355);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.26 0.04 268);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(0.28 0.035 268);
+  --sidebar-ring: oklch(0.74 0.17 355);
+
+  /* Signature: scale ticket + scale display */
+  --ticket: oklch(0.975 0.028 92);
+  --ticket-ink: oklch(0.25 0.01 60);
+  --ticket-rule: oklch(0.82 0.01 80);
+  --scale-bg: oklch(0.17 0.03 255);
+  --scale-digit: oklch(0.82 0.16 160);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-heading: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-ticket), ui-monospace, SFMono-Regular, Menlo, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -84,6 +99,14 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-ticket: var(--ticket);
+  --color-ticket-ink: var(--ticket-ink);
+  --color-ticket-rule: var(--ticket-rule);
+  --color-scale-bg: var(--scale-bg);
+  --color-scale-digit: var(--scale-digit);
+  --color-night: oklch(0.19 0.035 268);
+  --color-neon: oklch(0.74 0.17 355);
+  --color-sky: oklch(0.6 0.16 265);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -103,32 +126,211 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "cv11", "ss01";
     text-rendering: optimizeLegibility;
   }
   h1,
   h2,
-  h3,
-  h4 {
-    @apply font-heading tracking-tight text-balance;
+  h3 {
+    @apply font-heading text-balance;
+  }
+  h1 {
+    font-variation-settings: "wdth" 108;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  h2,
+  h3 {
+    font-variation-settings: "wdth" 102;
+    font-weight: 600;
+    letter-spacing: -0.01em;
   }
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
   ::selection {
-    background: oklch(0.43 0.135 22 / 0.18);
+    background: oklch(0.53 0.19 3 / 0.18);
+  }
+  :focus-visible {
+    outline-offset: 2px;
   }
 }
 
-@utility num {
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum", "cv11";
+/*
+ * Scrollbars: slim navy pills that match the sidebar instead of the browser's grey default.
+ * Light surfaces get a Night thumb on a clear track; Night surfaces (sidebar, price board)
+ * get a lighter navy thumb. Thumbs turn Raspberry while dragged.
+ */
+:root {
+  --scroll-thumb: oklch(0.19 0.035 268 / 0.55);
+  --scroll-thumb-hover: oklch(0.19 0.035 268 / 0.85);
+  --scroll-thumb-active: oklch(0.53 0.19 3);
+  --scroll-track: transparent;
 }
 
-/* Subtle butcher-paper texture used for product art fallbacks and hero areas. */
-@utility paper {
+.scroll-night {
+  --scroll-thumb: oklch(0.42 0.05 268);
+  --scroll-thumb-hover: oklch(0.52 0.06 268);
+  --scroll-thumb-active: oklch(0.74 0.17 355);
+}
+
+/* Firefox (and browsers without the WebKit pseudo-elements) */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+  }
+}
+
+/* Chromium, Edge, Safari */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--scroll-track);
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--scroll-thumb);
+  border-radius: 999px;
+  border: 2.5px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scroll-thumb-hover);
+}
+::-webkit-scrollbar-thumb:active {
+  background-color: var(--scroll-thumb-active);
+}
+::-webkit-scrollbar-button,
+::-webkit-scrollbar-corner {
+  display: none;
+  background: transparent;
+}
+/* The page itself scrolls against the tile background: give its track a faint navy rail. */
+html::-webkit-scrollbar-track {
+  background: oklch(0.19 0.035 268 / 0.05);
+}
+
+@layer components {
+  /* Data tables: quiet header band, roomy rows, subtle hover. Apply to <table>. */
+  .data-table {
+    @apply w-full text-sm;
+  }
+  .data-table thead tr {
+    @apply border-b bg-muted/60 text-left text-[11px] tracking-wider text-muted-foreground uppercase;
+  }
+  .data-table th {
+    @apply py-2.5 font-semibold whitespace-nowrap first:pl-5 last:pr-5;
+    padding-inline: 0.75rem;
+  }
+  .data-table td {
+    @apply py-3 align-middle first:pl-5 last:pr-5;
+    padding-inline: 0.75rem;
+  }
+  .data-table tbody tr {
+    @apply border-b border-border/70 transition-colors last:border-0 hover:bg-muted/40;
+  }
+}
+
+/* Tabular figures for any numeric UI text. */
+@utility num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Wide sign-style display text (hero, product labels). */
+@utility display-wide {
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 125;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+/*
+ * Signature: the scale ticket. A printed label with a perforated top/bottom edge,
+ * receipt mono figures and dotted leaders between label and value.
+ */
+@utility ticket {
+  position: relative;
+  background-color: var(--ticket);
+  color: var(--ticket-ink);
+  font-family: var(--font-ticket);
+  -webkit-mask:
+    radial-gradient(circle at 6px 0, transparent 4px, #000 4.5px) top left / 12px 51% repeat-x,
+    radial-gradient(circle at 6px 100%, transparent 4px, #000 4.5px) bottom left / 12px 51% repeat-x;
+  mask:
+    radial-gradient(circle at 6px 0, transparent 4px, #000 4.5px) top left / 12px 51% repeat-x,
+    radial-gradient(circle at 6px 100%, transparent 4px, #000 4.5px) bottom left / 12px 51% repeat-x;
+}
+
+@utility ticket-leader {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  &::after {
+    content: "";
+    order: 1;
+    flex: 1;
+    border-bottom: 1.5px dotted var(--ticket-rule);
+    transform: translateY(-0.25em);
+  }
+  & > :last-child {
+    order: 2;
+  }
+}
+
+/* Signature: the scale's digital display used when weighing. */
+@utility scale-display {
+  background:
+    linear-gradient(180deg, oklch(1 0 0 / 0.05), transparent 40%),
+    var(--scale-bg);
+  color: var(--scale-digit);
+  font-family: var(--font-ticket);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 12px oklch(0.82 0.16 160 / 0.45);
+  box-shadow: inset 0 2px 6px oklch(0 0 0 / 0.5), 0 0 0 1px oklch(0 0 0 / 0.3);
+}
+
+/* Fine tile grid used behind hero areas. */
+@utility tile-grid {
   background-image:
-    radial-gradient(circle at 20% 15%, oklch(1 0 0 / 0.55), transparent 45%),
-    repeating-linear-gradient(135deg, oklch(0 0 0 / 0.018) 0 2px, transparent 2px 9px);
+    linear-gradient(oklch(0.2 0.025 265 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.2 0.025 265 / 0.045) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+@utility enter {
+  animation: enter 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 oklch(0.72 0.17 155 / 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 5px oklch(0.72 0.17 155 / 0);
+  }
+}
+
+@utility live-dot {
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
