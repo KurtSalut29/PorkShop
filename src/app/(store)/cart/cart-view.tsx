@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, ShoppingBag, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowRight, LogIn, ShoppingBag, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { refreshCartAction } from "@/app/actions/orders";
 import { useCart } from "@/components/cart/cart-context";
@@ -19,7 +19,13 @@ import { lineEstimate } from "@/lib/pricing";
 
 type Issue = { kind: "gone" | "stock" | "price"; message: string };
 
-export function CartView() {
+/** Who is looking at the cart. Only customer accounts can check out. */
+export type CartViewer = "loading" | "guest" | "customer" | "staff";
+
+const CHECKOUT_SIGN_IN = `/sign-in?next=${encodeURIComponent("/checkout")}`;
+const CHECKOUT_SIGN_UP = `/sign-up?next=${encodeURIComponent("/checkout")}`;
+
+export function CartView({ viewer }: { viewer: CartViewer }) {
   const { items, ready, setQty, remove, replace, subtotal } = useCart();
   const confirm = useConfirm();
   const [issues, setIssues] = useState<Record<string, Issue>>({});
@@ -183,19 +189,58 @@ export function CartView() {
           total={{ label: "Estimate", value: formatPeso(subtotal) }}
           footnote="The final amount uses the actual weight of your cuts. You’ll see it when your order is packed."
         />
-        <Button asChild={!blocking && checked} size="lg" className="mt-4 h-11 w-full text-[15px]" disabled={blocking || !checked}>
-          {!blocking && checked ? (
-            <Link href="/checkout">
-              Choose a pickup time <ArrowRight className="size-4" />
-            </Link>
-          ) : (
-            <span>{checked ? "Fix the marked items to continue" : "Checking today’s stock…"}</span>
-          )}
-        </Button>
+        <CheckoutButton viewer={viewer} blocking={blocking} checked={checked} />
         <Link href="/shop" className="mt-3 block text-center text-sm text-muted-foreground hover:text-foreground">
           Continue shopping
         </Link>
       </aside>
     </div>
+  );
+}
+
+function CheckoutButton({ viewer, blocking, checked }: { viewer: CartViewer; blocking: boolean; checked: boolean }) {
+  const cls = "mt-4 h-11 w-full text-[15px]";
+  if (blocking || !checked || viewer === "loading") {
+    return (
+      <Button size="lg" className={cls} disabled>
+        {!checked || viewer === "loading" ? "Checking today’s stock…" : "Fix the marked items to continue"}
+      </Button>
+    );
+  }
+  if (viewer === "guest") {
+    return (
+      <>
+        <Button asChild size="lg" className={cls}>
+          <Link href={CHECKOUT_SIGN_IN}>
+            <LogIn className="size-4" /> Sign in to check out
+          </Link>
+        </Button>
+        <p className="mt-3 rounded-lg bg-muted/70 px-3 py-2.5 text-center text-xs leading-relaxed text-muted-foreground">
+          You need an account to reserve a pickup. Your cart stays saved on this device.{" "}
+          <Link href={CHECKOUT_SIGN_UP} className="font-medium text-primary hover:underline">
+            Create an account
+          </Link>
+        </p>
+      </>
+    );
+  }
+  if (viewer === "staff") {
+    return (
+      <>
+        <Button size="lg" className={cls} disabled>
+          Customer accounts only
+        </Button>
+        <p className="mt-3 rounded-lg bg-muted/70 px-3 py-2.5 text-center text-xs leading-relaxed text-muted-foreground">
+          You’re signed in with a staff account. Sign in as a customer to place an order.
+        </p>
+      </>
+    );
+  }
+  return (
+    <Button asChild size="lg" className={cls}>
+      <Link href="/checkout">
+        Choose a pickup time <ArrowRight className="size-4" />
+      </Link>
+    </Button>
   );
 }

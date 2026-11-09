@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { AuthSwitchLink } from "../auth-links";
 import { Suspense } from "react";
 import { SignInForm } from "./sign-in-form";
 
@@ -15,9 +15,7 @@ export default function SignInPage() {
       </Suspense>
       <p className="mt-8 text-center text-sm text-muted-foreground">
         New to Porkshop?{" "}
-        <Link href="/sign-up" className="font-medium text-primary hover:underline">
-          Create a customer account
-        </Link>
+        <AuthSwitchLink href="/sign-up">Create a customer account</AuthSwitchLink>
       </p>
       <p className="mt-3 text-center text-xs text-muted-foreground">
         Staff accounts are created by the shop owner.

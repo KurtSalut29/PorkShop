@@ -16,6 +16,8 @@
  * Errors use an orange-red (not pink) so they never read as brand.
  */
 :root {
+  /* Height the floating store nav reserves at the top of the page (top gap + pill). */
+  --store-nav: 7.75rem;
   --background: oklch(0.971 0.004 265);
   --foreground: oklch(0.2 0.025 265);
   --card: oklch(1 0 0);
@@ -332,5 +334,11 @@ html::-webkit-scrollbar-track {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+  }
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --store-nav: 5rem;
   }
 }

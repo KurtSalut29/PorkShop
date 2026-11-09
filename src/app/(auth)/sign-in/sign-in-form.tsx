@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { safeNext } from "../auth-links";
 import { PasswordInput } from "../password-input";
 
 const DEMO = [
@@ -81,7 +82,7 @@ export function SignInForm() {
     }
     toast.success(`Welcome back, ${data?.user.name.split(" ")[0] ?? "there"}`, { id, description: "You're signed in." });
     // Only allow same-site relative redirects.
-    const target = next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
+    const target = safeNext(next) ?? "/dashboard";
     router.push(target);
     router.refresh();
   }

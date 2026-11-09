@@ -37,13 +37,13 @@ function DesktopLinks({ pathname }: { pathname: string }) {
 
 function MobileLinks({ pathname }: { pathname: string }) {
   return (
-    <nav aria-label="Store" className="flex gap-1 border-t px-4 py-1.5 md:hidden">
+    <nav aria-label="Store" className="flex gap-1 border-t border-black/[0.06] p-1.5 md:hidden">
       {LINKS.map((l) => (
         <Link
           key={l.href}
           href={l.href}
           className={cn(
-            "flex-1 rounded-md py-1.5 text-center text-sm font-medium",
+            "flex-1 rounded-lg py-1.5 text-center text-sm font-medium",
             isActive(pathname, l.href) ? "bg-muted text-foreground" : "text-muted-foreground",
           )}
         >

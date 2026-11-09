@@ -12,12 +12,13 @@ import { formatPeso, formatQty, unitLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { listCatalog } from "@/server/queries/catalog";
 
-const CATEGORIES: { key: ProductCategory; label: string; blurb: string }[] = [
-  { key: "PRIME_CUTS", label: "Liempo", blurb: "Belly, leg, shoulder & loin" },
-  { key: "RIBS_AND_BONES", label: "Tadyang", blurb: "Spare ribs & soup bones" },
-  { key: "GROUND", label: "Giniling", blurb: "Ground fresh every morning" },
-  { key: "SPECIALTY", label: "Pata", blurb: "Hock, feet & whole head" },
-  { key: "FAT", label: "Taba", blurb: "Back fat for lard & chicharon" },
+/** `cover` is the cut whose photo represents the category (it matches the sign label). */
+const CATEGORIES: { key: ProductCategory; label: string; blurb: string; cover: string }[] = [
+  { key: "PRIME_CUTS", label: "Liempo", blurb: "Belly, leg, shoulder & loin", cover: "pork-belly" },
+  { key: "RIBS_AND_BONES", label: "Tadyang", blurb: "Spare ribs & soup bones", cover: "pork-ribs" },
+  { key: "GROUND", label: "Giniling", blurb: "Ground fresh every morning", cover: "pork-giniling" },
+  { key: "SPECIALTY", label: "Pata", blurb: "Hock, feet & whole head", cover: "pork-hock-feet" },
+  { key: "FAT", label: "Taba", blurb: "Back fat for lard & chicharon", cover: "pork-fat" },
 ];
 
 const STEPS = [
@@ -30,7 +31,7 @@ const STEPS = [
 export default function HomePage() {
   return (
     <>
-      <section className="relative overflow-hidden bg-night text-white">
+      <section className="relative -mt-(--store-nav) overflow-hidden bg-night pt-(--store-nav) text-white">
         <div className="tile-grid pointer-events-none absolute inset-0 opacity-60 [filter:invert(1)]" aria-hidden />
         <Container className="relative grid items-center gap-12 py-14 sm:py-20 lg:grid-cols-[1fr_1.05fr]">
           <div className="enter">
@@ -74,21 +75,9 @@ export default function HomePage() {
             All cuts
           </Link>
         </div>
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {CATEGORIES.map((c) => (
-            <Link
-              key={c.key}
-              href={`/shop?category=${c.key}`}
-              className="group rounded-2xl border bg-card p-2 transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-12px_oklch(0.2_0.02_240/0.25)]"
-            >
-              <ProductArt category={c.key} name={CATEGORY_LABEL[c.key]} label={c.label} className="aspect-[5/4] rounded-xl" />
-              <div className="px-1.5 pt-3 pb-1">
-                <p className="text-sm font-semibold group-hover:text-primary">{CATEGORY_LABEL[c.key]}</p>
-                <p className="text-xs text-muted-foreground">{c.blurb}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
+        <Suspense fallback={<CategoryTiles />}>
+          <CategoryTilesWithPhotos />
+        </Suspense>
 
         <div className="mt-16 flex items-end justify-between gap-4">
           <div>
@@ -187,6 +176,50 @@ async function PriceBoard() {
         })}
       </ul>
       <p className="px-4 pt-3 pb-2 text-xs text-white/40">Updates the moment an order is placed or a delivery arrives.</p>
+    </div>
+  );
+}
+
+/** Category tiles use the photo of their cover cut, falling back to any photographed cut in that category. */
+async function CategoryTilesWithPhotos() {
+  const products = await listCatalog();
+  const photos = Object.fromEntries(
+    CATEGORIES.map((c) => {
+      const p =
+        products.find((x) => x.slug === c.cover && x.imageUrl) ?? products.find((x) => x.category === c.key && x.imageUrl);
+      return [c.key, p ? { imageUrl: p.imageUrl, imageStyle: p.imageStyle } : undefined];
+    }),
+  ) as Partial<Record<ProductCategory, { imageUrl: string | null; imageStyle: "cutout" | "photo" }>>;
+  return <CategoryTiles photos={photos} />;
+}
+
+function CategoryTiles({
+  photos = {},
+}: {
+  photos?: Partial<Record<ProductCategory, { imageUrl: string | null; imageStyle: "cutout" | "photo" }>>;
+}) {
+  return (
+    <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      {CATEGORIES.map((c) => (
+        <Link
+          key={c.key}
+          href={`/shop?category=${c.key}`}
+          className="group rounded-2xl border bg-card p-2 transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-12px_oklch(0.2_0.02_240/0.25)]"
+        >
+          <ProductArt
+            category={c.key}
+            name={CATEGORY_LABEL[c.key]}
+            label={c.label}
+            imageUrl={photos[c.key]?.imageUrl}
+            imageStyle={photos[c.key]?.imageStyle}
+            className="aspect-[5/4] rounded-xl"
+          />
+          <div className="px-1.5 pt-3 pb-1">
+            <p className="text-sm font-semibold group-hover:text-primary">{CATEGORY_LABEL[c.key]}</p>
+            <p className="text-xs text-muted-foreground">{c.blurb}</p>
+          </div>
+        </Link>
+      ))}
     </div>
   );
 }

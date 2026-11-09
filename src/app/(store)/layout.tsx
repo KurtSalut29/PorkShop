@@ -35,10 +35,14 @@ async function HeaderAccount() {
   if (!user) {
     return (
       <>
+        {/* Phones get one button (the sign-in page links to sign-up); wider screens get both. */}
+        <Button asChild className="sm:hidden">
+          <Link href="/sign-in">Sign in</Link>
+        </Button>
         <Button variant="ghost" asChild className="hidden sm:inline-flex">
           <Link href="/sign-in">Sign in</Link>
         </Button>
-        <Button asChild>
+        <Button asChild className="hidden sm:inline-flex">
           <Link href="/sign-up">Create account</Link>
         </Button>
       </>
@@ -84,20 +88,25 @@ export default function StoreLayout({ children }: LayoutProps<"/">) {
           </span>
         </Container>
       </div>
-      <header className="sticky top-0 z-30 border-b bg-background/85 backdrop-blur-md">
-        <Container className="flex h-16 items-center gap-8">
-          <Logo href="/" />
-          <StoreNav />
-          <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-            <CartButton />
-            <Suspense fallback={<Skeleton className="h-9 w-32 rounded-lg" />}>
-              <HeaderAccount />
-            </Suspense>
+      {/* Floating nav: takes no space of its own (main reserves --store-nav), so it hovers over the hero. */}
+      <header className="pointer-events-none sticky top-0 z-40 mb-[calc(var(--store-nav)*-1)] h-(--store-nav) pt-3">
+        <Container>
+          <div className="pointer-events-auto rounded-2xl border border-black/[0.06] bg-card/95 shadow-[0_1px_2px_oklch(0.2_0.03_268/0.06),0_12px_32px_-12px_oklch(0.2_0.03_268/0.28)] backdrop-blur-xl backdrop-saturate-150">
+            <div className="flex h-16 items-center gap-4 pr-2.5 pl-3.5 sm:gap-8 sm:pr-3 sm:pl-5">
+              <Logo href="/" />
+              <StoreNav />
+              <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+                <CartButton />
+                <Suspense fallback={<Skeleton className="h-9 w-32 rounded-lg" />}>
+                  <HeaderAccount />
+                </Suspense>
+              </div>
+            </div>
+            <MobileStoreNav />
           </div>
         </Container>
-        <MobileStoreNav />
       </header>
-      <main id="main" className="flex-1">
+      <main id="main" className="flex-1 pt-(--store-nav)">
         {children}
       </main>
       <footer className="mt-20 bg-night text-white/70">

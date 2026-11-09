@@ -1,7 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { NETWORK_ERROR, notify } from "@/components/feedback/notify";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { safeNext } from "../auth-links";
 import { PasswordInput, StrengthMeter } from "../password-input";
 
 type Values = { name: string; email: string; phone: string; password: string; confirmPassword: string; terms: boolean };
@@ -20,6 +21,7 @@ const EMPTY: Values = { name: "", email: "", phone: "", password: "", confirmPas
 
 export function SignUpForm() {
   const router = useRouter();
+  const next = safeNext(useSearchParams().get("next"));
   const [values, setValues] = useState<Values>(EMPTY);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -72,7 +74,7 @@ export function SignUpForm() {
         toast.error("That email is already registered", {
           id,
           description: "Sign in instead, or use a different email address.",
-          action: { label: "Sign in", onClick: () => router.push("/sign-in") },
+          action: { label: "Sign in", onClick: () => router.push(next ? `/sign-in?next=${encodeURIComponent(next)}` : "/sign-in") },
           duration: 8000,
         });
       } else {
@@ -83,9 +85,9 @@ export function SignUpForm() {
     }
     toast.success(`Welcome to Porkshop, ${name.split(" ")[0]}!`, {
       id,
-      description: "Your account is ready. Start browsing today’s cuts.",
+      description: next === "/checkout" ? "Your account is ready. Choose a pickup time to finish your order." : "Your account is ready. Start browsing today’s cuts.",
     });
-    router.push("/shop");
+    router.push(next ?? "/shop");
     router.refresh();
   }
 
