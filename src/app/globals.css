@@ -342,3 +342,27 @@ html::-webkit-scrollbar-track {
     --store-nav: 5rem;
   }
 }
+
+/* ── Toasts ────────────────────────────────────────────────────────────────────────────
+ * Look and spacing live in components/ui/sonner.tsx; these are the structural rules that
+ * Sonner only applies to its own styled toasts.
+ */
+/* Collapsed stack: toasts behind the front one show as layered edges only, never their text. */
+[data-sonner-toast][data-styled="false"][data-expanded="false"][data-front="false"] > * {
+  opacity: 0;
+}
+[data-sonner-toast][data-styled="false"][data-expanded="false"][data-front="false"] {
+  overflow: hidden;
+}
+/* Toasts with buttons (Undo, View cart): the message keeps the full width and the buttons
+ * sit on their own row, lined up under the text. */
+[data-sonner-toast][data-styled="false"]:has([data-button]) {
+  flex-wrap: wrap;
+  row-gap: 0.625rem;
+}
+[data-sonner-toast][data-styled="false"]:has([data-button]) [data-content] {
+  flex-basis: calc(100% - 2.75rem);
+}
+[data-sonner-toast][data-styled="false"] [data-content] + [data-button] {
+  margin-left: 2.75rem;
+}
