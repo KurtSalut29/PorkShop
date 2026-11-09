@@ -1,0 +1,317 @@
+// Porkshop — Distributed Inventory & Order Management
+// Quantities are stored as DECIMAL(12,3): kilograms for KG products, pieces for PIECE products.
+// Money is stored as DECIMAL(12,2) in Philippine pesos.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────────── Enums ─────────────────────────────
+
+enum Role {
+  OWNER
+  WORKER
+  CUSTOMER
+}
+
+enum DutyStatus {
+  ON_DUTY
+  ON_BREAK
+  OFF_DUTY
+}
+
+enum SaleUnit {
+  KG
+  PIECE
+}
+
+enum ProductCategory {
+  PRIME_CUTS
+  RIBS_AND_BONES
+  GROUND
+  SPECIALTY
+  FAT
+}
+
+enum OrderStatus {
+  PENDING // waiting in the assignment queue
+  ASSIGNED // assigned to a worker, not started
+  PROCESSING // worker is preparing / cutting
+  READY // ready for pickup; stock withdrawn with actual weights
+  COMPLETED // handed over to the customer
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+}
+
+enum PaymentMethod {
+  CASH
+  GCASH
+  CARD
+}
+
+enum CancelRequestStatus {
+  NONE
+  PENDING
+  REJECTED
+}
+
+enum StockTxnType {
+  STOCK_IN // delivery / restock (owner)
+  WITHDRAWAL // taken out for an order or manually (worker)
+  RETURN // returned to inventory
+  SPOILAGE // wastage / spoiled product written off
+  CORRECTION // physical count correction (+/-)
+}
+
+// ───────────────────────────── Auth (Better Auth) ─────────────────────────────
+
+model User {
+  id              String     @id
+  name            String
+  email           String     @unique
+  emailVerified   Boolean    @default(false)
+  image           String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  role            Role       @default(CUSTOMER)
+  phone           String?
+  active          Boolean    @default(true)
+  dutyStatus      DutyStatus @default(OFF_DUTY)
+  dutyChangedAt   DateTime?
+  lastAssignedAt  DateTime?
+  maxActiveOrders Int?
+
+  sessions       Session[]
+  accounts       Account[]
+  customerOrders Order[]            @relation("CustomerOrders")
+  assignedOrders Order[]            @relation("WorkerOrders")
+  notifications  Notification[]
+  stockTxns      StockTransaction[]
+  auditLogs      AuditLog[]
+  orderEvents    OrderEvent[]       @relation("EventActor")
+
+  @@index([role, active, dutyStatus])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+// ───────────────────────────── Catalog & Inventory ─────────────────────────────
+
+model Product {
+  id                String          @id @default(cuid())
+  sku               String          @unique
+  slug              String          @unique
+  name              String
+  localName         String?
+  description       String
+  category          ProductCategory
+  unit              SaleUnit
+  price             Decimal         @db.Decimal(12, 2)
+  stockQty          Decimal         @default(0) @db.Decimal(12, 3)
+  reservedQty       Decimal         @default(0) @db.Decimal(12, 3)
+  lowStockThreshold Decimal         @db.Decimal(12, 3)
+  minOrderQty       Decimal         @db.Decimal(12, 3)
+  qtyStep           Decimal         @db.Decimal(12, 3)
+  imageUrl          String?
+  archived          Boolean         @default(false)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  orderItems OrderItem[]
+  stockTxns  StockTransaction[]
+
+  @@index([archived, category])
+}
+
+model StockTransaction {
+  id           String       @id @default(cuid())
+  productId    String
+  product      Product      @relation(fields: [productId], references: [id])
+  type         StockTxnType
+  quantity     Decimal      @db.Decimal(12, 3) // signed delta applied to stockQty
+  balanceAfter Decimal      @db.Decimal(12, 3)
+  reason       String?
+  orderId      String?
+  order        Order?       @relation(fields: [orderId], references: [id])
+  actorId      String?
+  actor        User?        @relation(fields: [actorId], references: [id])
+  createdAt    DateTime     @default(now())
+
+  @@index([productId, createdAt])
+  @@index([type, createdAt])
+  @@index([createdAt])
+}
+
+// ───────────────────────────── Orders ─────────────────────────────
+
+model Order {
+  id             String              @id @default(cuid())
+  number         Int                 @unique @default(autoincrement())
+  customerId     String
+  customer       User                @relation("CustomerOrders", fields: [customerId], references: [id])
+  workerId       String?
+  worker         User?               @relation("WorkerOrders", fields: [workerId], references: [id])
+  status         OrderStatus         @default(PENDING)
+  pickupAt       DateTime
+  notes          String?
+  estimatedTotal Decimal             @db.Decimal(12, 2)
+  finalTotal     Decimal?            @db.Decimal(12, 2)
+  paymentStatus  PaymentStatus       @default(UNPAID)
+  paymentMethod  PaymentMethod?
+  paidAt         DateTime?
+  cancelRequest  CancelRequestStatus @default(NONE)
+  cancelReason   String?
+  assignedAt     DateTime?
+  processingAt   DateTime?
+  readyAt        DateTime?
+  completedAt    DateTime?
+  cancelledAt    DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  items     OrderItem[]
+  events    OrderEvent[]
+  stockTxns StockTransaction[]
+
+  @@index([status, createdAt])
+  @@index([workerId, status])
+  @@index([customerId, createdAt])
+  @@index([pickupAt])
+  @@index([completedAt])
+}
+
+model OrderItem {
+  id             String   @id @default(cuid())
+  orderId        String
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id])
+  productName    String
+  unit           SaleUnit
+  unitPrice      Decimal  @db.Decimal(12, 2)
+  orderedQty     Decimal  @db.Decimal(12, 3)
+  actualQty      Decimal? @db.Decimal(12, 3)
+  estimatedTotal Decimal  @db.Decimal(12, 2)
+  finalTotal     Decimal? @db.Decimal(12, 2)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+/// Timeline of everything that happens to an order — powers order tracking and the assignment log.
+model OrderEvent {
+  id         String       @id @default(cuid())
+  orderId    String
+  order      Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  type       String // CREATED | ASSIGNED | REASSIGNED | REQUEUED | STATUS | CANCEL_REQUESTED | CANCEL_REJECTED | PAYMENT
+  fromStatus OrderStatus?
+  toStatus   OrderStatus?
+  workerId   String?
+  actorId    String?
+  actor      User?        @relation("EventActor", fields: [actorId], references: [id])
+  message    String
+  createdAt  DateTime     @default(now())
+
+  @@index([orderId, createdAt])
+  @@index([type, createdAt])
+}
+
+// ───────────────────────────── Notifications, audit, settings ─────────────────────────────
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // ORDER | STOCK | SYSTEM
+  title     String
+  body      String
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  action     String // e.g. product.update, stock.spoilage, worker.deactivate
+  entityType String
+  entityId   String?
+  summary    String
+  details    Json?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+}
+
+/// Single-row table (id = 1) holding shop-wide configuration.
+model ShopSettings {
+  id                       Int      @id @default(1)
+  shopName                 String   @default("Porkshop")
+  openTime                 String   @default("07:00") // HH:mm, Asia/Manila
+  closeTime                String   @default("18:00")
+  slotMinutes              Int      @default(60)
+  slotCapacity             Int      @default(8)
+  leadTimeMinutes          Int      @default(60)
+  advanceDays              Int      @default(3)
+  maxActiveOrdersPerWorker Int      @default(5)
+  updatedAt                DateTime @updatedAt
+}
