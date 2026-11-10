@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { Eye } from "lucide-react";
 import { ProductArt } from "@/components/product-art";
 import { PriceTag } from "@/components/ticket";
+import { PhotoUpload } from "./photo-upload";
 import type { ProductView } from "@/server/queries/catalog";
 
 export function ProductForm({ product }: { product?: ProductView }) {
@@ -38,6 +39,8 @@ export function ProductForm({ product }: { product?: ProductView }) {
     price: product ? String(product.price) : "",
     description: product?.description ?? "",
   });
+  // How a newly uploaded photo should be shown (measured by the server on upload).
+  const [uploadedStyle, setUploadedStyle] = useState<"cutout" | "photo" | undefined>();
 
   const {
     onSubmit,
@@ -117,8 +120,8 @@ export function ProductForm({ product }: { product?: ProductView }) {
           changes.push({ label: "Description", value: "Updated" });
         if (v("imageUrl") !== (product.imageUrl ?? ""))
           changes.push({
-            label: "Image",
-            value: v("imageUrl") ? "Updated" : "Removed",
+            label: "Photo",
+            value: v("imageUrl") ? "New photo" : "Removed (category illustration)",
           });
         const priceChanged = Number(v("price")) !== product.price;
         return {
@@ -240,20 +243,15 @@ export function ProductForm({ product }: { product?: ProductView }) {
                 aria-invalid={!!errorFor(fe, "description")}
               />
             </Field>
-            <Field
-              label="Image URL"
-              htmlFor="imageUrl"
-              optional
-              error={errorFor(fe, "imageUrl")}
-              className="sm:col-span-2"
-              hint="Leave blank to use the category illustration"
-            >
-              <Input
-                id="imageUrl"
-                name="imageUrl"
-                type="url"
-                defaultValue={product?.imageUrl ?? ""}
-                placeholder="https://…"
+            <Field label="Photo" htmlFor="productPhoto" optional className="sm:col-span-2">
+              <PhotoUpload
+                id="productPhoto"
+                value={draft.imageUrl}
+                error={errorFor(fe, "imageUrl")}
+                onChange={({ url, imageStyle }) => {
+                  setDraft((d) => ({ ...d, imageUrl: url }));
+                  setUploadedStyle(imageStyle);
+                }}
               />
             </Field>
           </div>
@@ -370,9 +368,10 @@ export function ProductForm({ product }: { product?: ProductView }) {
         category={category}
         unit={unit}
         imageStyle={
-          product && draft.imageUrl === (product.imageUrl ?? "")
+          uploadedStyle ??
+          (product && draft.imageUrl === (product.imageUrl ?? "")
             ? product.imageStyle
-            : undefined
+            : undefined)
         }
       />
     </form>

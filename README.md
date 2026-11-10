@@ -165,7 +165,12 @@ The look comes from the Porkshop logo and the butcher counter:
 - **Not confirmed:** browsing, searching and adding to the cart. Adding to the cart offers **Undo** instead.
 
 ### Images
-Product photos and the logo are prepared by a script:
+**Uploading product photos (owner):** on *Products → Add product* or *Edit*, drag a photo into the Photo box or choose a file (JPG, PNG, WebP or HEIC; up to 10 MB; at least 300 px). It uploads straight away with a progress bar and shows in the live *Customer view*; the product changes only when you save.
+- Uploads go to `POST /api/uploads/product-image` (owner only). The file's real type is read from its bytes, phone rotation is applied, metadata such as GPS location is stripped, and it is re-encoded to WebP at most 1600 px.
+- Photos are stored in PostgreSQL (`ProductImage`), not on one server's disk, so every app instance can serve them. They are served from `/media/products/<id>.webp` with long-lived cache headers.
+- Replacing or removing a product's photo deletes the old upload once no product uses it.
+
+The bundled demo photos and the logo are prepared by a script:
 
 ```bash
 node scripts/process-images.mjs

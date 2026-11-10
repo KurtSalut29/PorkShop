@@ -315,3 +315,18 @@ model ShopSettings {
   maxActiveOrdersPerWorker Int      @default(5)
   updatedAt                DateTime @updatedAt
 }
+
+/// Product photos uploaded by the owner. Stored in the database (not on a server's disk) so every
+/// app instance can serve them. Always re-encoded to WebP on upload; served at /media/products/<id>.webp.
+model ProductImage {
+  id         String   @id @default(cuid())
+  data       Bytes
+  mimeType   String
+  width      Int
+  height     Int
+  byteSize   Int
+  /// "cutout" (studio shot on white) or "photo" (has its own background), measured on upload.
+  style      String
+  uploadedBy String?
+  createdAt  DateTime @default(now())
+}

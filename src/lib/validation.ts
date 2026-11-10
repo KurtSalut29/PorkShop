@@ -53,8 +53,9 @@ export const productSchema = z.object({
   lowStockThreshold: decimalField("Low-stock level", { allowZero: true }),
   minOrderQty: decimalField("Minimum order"),
   qtyStep: decimalField("Quantity step"),
+  // Set by the photo uploader (or kept from before); never typed by hand.
   imageUrl: z
-    .union([z.url(), z.string().regex(/^\/[\w\-./]+$/)], { error: "Use a full https:// link or a site path like /products/pork-belly.jpg." })
+    .union([z.url(), z.string().regex(/^\/[\w\-./]+$/)], { error: "That photo couldn’t be attached. Upload it again." })
     .optional()
     .or(z.literal("")),
 });

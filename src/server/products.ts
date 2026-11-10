@@ -5,6 +5,7 @@ import { audit } from "./audit";
 import { db } from "./db";
 import { DomainError } from "./errors";
 import { dec } from "./inventory";
+import { deleteImageIfUnused, uploadedImageId } from "./product-images";
 import { publish } from "./realtime";
 
 export type ProductInput = {
@@ -52,8 +53,17 @@ async function uniqueSlug(base: string, excludeId?: string) {
   }
 }
 
+/** An uploaded photo URL must point at a photo that was actually uploaded. */
+async function checkImage(imageUrl: string | undefined) {
+  const id = uploadedImageId(imageUrl);
+  if (imageUrl?.startsWith("/media/") && (!id || !(await db.productImage.count({ where: { id } })))) {
+    throw new DomainError("That photo is no longer available. Upload it again.");
+  }
+}
+
 export async function createProduct(actorId: string, input: ProductInput) {
   checkRules(input);
+  await checkImage(input.imageUrl);
   const skuTaken = await db.product.findUnique({ where: { sku: input.sku }, select: { id: true } });
   if (skuTaken) throw new DomainError("That SKU is already used by another product.");
   const slug = await uniqueSlug(slugify(input.name));
@@ -84,6 +94,7 @@ export async function createProduct(actorId: string, input: ProductInput) {
 
 export async function updateProduct(actorId: string, productId: string, input: ProductInput) {
   checkRules(input);
+  await checkImage(input.imageUrl);
   const existing = await db.product.findUnique({ where: { id: productId } });
   if (!existing) throw new DomainError("Product not found.");
   const skuTaken = await db.product.findFirst({
@@ -131,6 +142,8 @@ export async function updateProduct(actorId: string, productId: string, input: P
     });
     await publish({ kind: "catalog", topics: ["all"] }, tx);
   });
+  // A replaced or removed upload is no longer used anywhere: free the space.
+  if (existing.imageUrl !== (input.imageUrl || null)) await deleteImageIfUnused(existing.imageUrl);
 }
 
 export async function setProductArchived(actorId: string, productId: string, archived: boolean) {
