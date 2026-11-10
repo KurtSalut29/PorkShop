@@ -8,15 +8,17 @@ Customers order fresh pork cuts online and choose a pickup slot. Orders are dist
 
 ## Quick start
 
-Prerequisites: **Node.js 20+** and **Docker Desktop**.
+> **Setting Porkshop up on a new computer?** Follow the step-by-step guide in **[SETUP.md](SETUP.md)**. It covers installing the tools, first run, everyday use, updates, backups and troubleshooting on Windows and macOS.
+
+Prerequisites: **Node.js 24 LTS** (22.12+ also works), **Git** and **Docker Desktop**.
 
 ```bash
-npm install                 # also generates the Prisma client
-cp .env.example .env        # then set BETTER_AUTH_SECRET to a long random string
+cp .env.example .env        # first: npm install needs it. Then set BETTER_AUTH_SECRET to a long random string
 npm run db:up               # starts PostgreSQL in Docker on localhost:5433
-npm run db:migrate          # creates the schema
-npm run db:seed             # products, demo accounts, 2 weeks of history
-npm run dev                 # http://localhost:3000
+npm install                 # also generates the Prisma client
+npx prisma migrate deploy   # creates the schema
+npm run db:seed             # products, demo accounts, 2 weeks of history (erases existing data)
+npm run dev                 # http://localhost:3000  (or: npm run build && npm start)
 ```
 
 ### Demo accounts
