@@ -106,7 +106,7 @@ export function CartView({ viewer }: { viewer: CartViewer }) {
 
   if (!ready) {
     return (
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_380px]">
+      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         <Skeleton className="h-64 rounded-2xl" />
         <Skeleton className="h-64 rounded-2xl" />
       </div>
@@ -133,37 +133,41 @@ export function CartView({ viewer }: { viewer: CartViewer }) {
 
   return (
     <>
-    <div className="mt-8 grid items-start gap-6 lg:grid-cols-[1fr_380px]">
+    <div className="mt-8 grid items-start grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
       <ul className="divide-y overflow-hidden rounded-2xl border bg-card">
         {items.map((item) => {
           const issue = issues[item.productId];
           const rule = { unit: item.unit, minOrderQty: item.minOrderQty, qtyStep: item.qtyStep };
           return (
-            <li key={item.productId} className="flex gap-4 p-4 sm:p-5">
-              <Link href={`/shop/${item.slug}`} className="w-20 shrink-0 sm:w-24">
+            <li
+              key={item.productId}
+              className="grid grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-x-4 gap-y-3 p-4 sm:grid-cols-[6rem_minmax(0,1fr)_auto] sm:p-5"
+            >
+              <Link href={`/shop/${item.slug}`} className="self-start">
                 <ProductArt category={item.category} name={item.name} imageUrl={item.imageUrl} imageStyle={item.imageStyle} size="sm" className="rounded-lg" />
               </Link>
-              <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <Link href={`/shop/${item.slug}`} className="font-medium hover:underline">
-                    {item.name}
-                  </Link>
-                  <p className="num text-sm text-muted-foreground">{formatUnitPrice(item.price, item.unit)}</p>
-                  {issue && (
-                    <p
-                      className={
-                        issue.kind === "price"
-                          ? "mt-1 flex items-center gap-1.5 text-[13px] text-amber-800"
-                          : "mt-1 flex items-center gap-1.5 text-[13px] font-medium text-red-700"
-                      }
-                    >
-                      <AlertTriangle className="size-3.5 shrink-0" /> {issue.message}
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center justify-between gap-4 sm:justify-end">
-                  <QtyStepper size="sm" value={item.qty} rule={rule} onChange={(q) => setQty(item.productId, q)} />
-                  <p className="num w-24 text-right font-semibold">{formatPeso(lineEstimate(item.price, item.qty))}</p>
+              <div className="min-w-0">
+                <Link href={`/shop/${item.slug}`} className="font-medium hover:underline">
+                  {item.name}
+                </Link>
+                <p className="num text-sm text-muted-foreground">{formatUnitPrice(item.price, item.unit)}</p>
+                {issue && (
+                  <p
+                    className={
+                      issue.kind === "price"
+                        ? "mt-1 flex items-center gap-1.5 text-[13px] text-amber-800"
+                        : "mt-1 flex items-center gap-1.5 text-[13px] font-medium text-red-700"
+                    }
+                  >
+                    <AlertTriangle className="size-3.5 shrink-0" /> {issue.message}
+                  </p>
+                )}
+              </div>
+              {/* Phones: its own full-width row under the photo and name. */}
+              <div className="col-span-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 sm:col-span-1 sm:flex-nowrap sm:justify-end sm:gap-4">
+                <QtyStepper size="sm" value={item.qty} rule={rule} onChange={(q) => setQty(item.productId, q)} />
+                <div className="flex items-center gap-1 sm:gap-4">
+                  <p className="num text-right font-semibold sm:w-24">{formatPeso(lineEstimate(item.price, item.qty))}</p>
                   <Button
                     variant="ghost"
                     size="icon-sm"

@@ -123,7 +123,7 @@ async function SalesTab({ range }: { range: Range }) {
         </details>
       </Section>
 
-      <div className="grid gap-6 xl:grid-cols-[3fr_2fr]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <Section title="Revenue by product">
           {r.byProduct.length === 0 ? (
             <p className="px-5 py-8 text-sm text-muted-foreground">No sales in this range.</p>
@@ -132,26 +132,28 @@ async function SalesTab({ range }: { range: Range }) {
               <div className="p-4">
                 <ProductRevenueChart data={r.byProduct} />
               </div>
-              <table className="w-full border-t text-sm">
-                <thead>
-                  <tr className="border-b bg-muted/50 text-left text-[11px] tracking-wider text-muted-foreground uppercase">
-                    <th className="px-5 py-2 font-semibold">Product</th>
-                    <th className="px-3 py-2 text-right font-semibold">Sold</th>
-                    <th className="px-3 py-2 text-right font-semibold">Orders</th>
-                    <th className="px-5 py-2 text-right font-semibold">Revenue</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {r.byProduct.map((p) => (
-                    <tr key={p.productId}>
-                      <td className="px-5 py-2 font-medium">{p.name}</td>
-                      <td className="num px-3 py-2 text-right">{formatQty(p.qty, p.unit)}</td>
-                      <td className="num px-3 py-2 text-right">{p.orders}</td>
-                      <td className="num px-5 py-2 text-right">{formatPeso(p.revenue)}</td>
+              <div className="relative overflow-x-auto border-t">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-muted/50 text-left text-[11px] tracking-wider text-muted-foreground uppercase">
+                      <th className="px-5 py-2 font-semibold">Product</th>
+                      <th className="px-3 py-2 text-right font-semibold">Sold</th>
+                      <th className="px-3 py-2 text-right font-semibold">Orders</th>
+                      <th className="px-5 py-2 text-right font-semibold">Revenue</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y">
+                    {r.byProduct.map((p) => (
+                      <tr key={p.productId}>
+                        <td className="px-5 py-2 font-medium">{p.name}</td>
+                        <td className="num px-3 py-2 text-right">{formatQty(p.qty, p.unit)}</td>
+                        <td className="num px-3 py-2 text-right">{p.orders}</td>
+                        <td className="num px-5 py-2 text-right">{formatPeso(p.revenue)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </>
           )}
         </Section>
@@ -195,7 +197,7 @@ async function MovementsTab({ range }: { range: Range }) {
         <StatCard label="Products tracked" value={r.table.length} />
       </div>
       <Section title="Movement by product" description="Quantities in each product's unit (kg or pcs)">
-        <div className="overflow-x-auto">
+        <div className="relative overflow-x-auto">
           <table className="w-full min-w-[860px] text-sm">
             <thead>
               <tr className="border-b bg-muted/50 text-left text-[11px] tracking-wider text-muted-foreground uppercase">
@@ -242,7 +244,7 @@ async function InventoryTab() {
         <StatCard label="Out of stock" value={r.outCount} tone={r.outCount ? "danger" : "default"} />
       </div>
       <Section title="Current inventory">
-        <div className="overflow-x-auto">
+        <div className="relative overflow-x-auto">
           <table className="w-full min-w-[760px] text-sm">
             <thead>
               <tr className="border-b bg-muted/50 text-left text-[11px] tracking-wider text-muted-foreground uppercase">

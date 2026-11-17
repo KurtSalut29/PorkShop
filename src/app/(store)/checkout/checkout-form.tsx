@@ -115,7 +115,7 @@ export function CheckoutForm({
   }
 
   return (
-    <div className="mt-8 grid items-start gap-6 lg:grid-cols-[1fr_380px]">
+    <div className="mt-8 grid items-start grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
       <div className="space-y-6">
         <section className="rounded-2xl border bg-card p-5 sm:p-6" aria-labelledby="pickup-heading">
           <h2 id="pickup-heading" className="flex items-center gap-2.5 text-base">

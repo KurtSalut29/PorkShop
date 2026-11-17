@@ -20,7 +20,7 @@ export default async function WorkerHistoryPage() {
         {orders.length === 0 ? (
           <EmptyState icon={History} title="No past orders yet" description="Completed orders will be listed here." />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto">
             <table className="w-full min-w-[720px] text-sm">
               <thead>
                 <tr className="border-b bg-muted/50 text-left text-[11px] tracking-wider text-muted-foreground uppercase">

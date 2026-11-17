@@ -64,7 +64,7 @@ In development, the sign-in page has one-tap buttons that fill in these accounts
 - Checkout with **pickup time slots** that show remaining capacity.
 - **Payment choice:** pay now by **GCash** (scan the shop's QR code or send to its number, then submit the reference number and a screenshot of the receipt) or pay **cash at pickup**.
 - Order tracking: a 6-step tracker (*Order received → Payment → Assigned to staff → Prepared → Ready for pickup → Picked up*) and an activity timeline, updated live.
-- On phones, the cart stays pinned to the bottom of the screen, and the cart page keeps the total and checkout button in reach.
+- A floating **View cart** button sits at the bottom right of every store page on every screen size, showing the item count and estimate. On phones, the cart page also keeps the total and checkout button pinned to the bottom.
 - Cancellation: instant until preparation starts, then a *request* that the owner approves.
 - Notifications (in-app and live toasts) and profile/password settings.
 
@@ -134,7 +134,7 @@ Customers choose **GCash** (pay before pickup) or **cash at pickup** at checkout
 Both limits (10 minutes and 2 hours by default) are owner settings. Deadlines are enforced by the sweeper every 30 seconds, under row locks, so several server instances never double-cancel. Receipts are stored in the database (`PaymentProof`) and served only to staff and the order's customer (`/api/payment-proofs/[id]`).
 
 ### Real-time synchronisation
-Every write calls `pg_notify` *inside its transaction*, so PostgreSQL delivers the message only after commit. Each Next.js instance keeps a single `LISTEN` connection and forwards events over **Server-Sent Events** (`/api/events`), filtered by role and user. In the browser, `RealtimeListener` re-renders the current page's Server Components in place and shows a toast for personal notifications. No extra infrastructure (Redis, websockets) is needed, and it works across multiple server instances.
+Every write calls `pg_notify` *inside its transaction*, so PostgreSQL delivers the message only after commit. Each Next.js instance keeps a single `LISTEN` connection and forwards events over **Server-Sent Events** (`/api/events`), filtered by role and user. In the browser, `RealtimeListener` re-renders the current page's Server Components in place and shows a toast for personal notifications. No extra infrastructure (Redis, websockets) is needed, and it works across multiple server instances. Each stream starts with a `hello` message; if a proxy holds the stream back (Cloudflare quick tunnels do), the browser switches to refreshing the page every 10 seconds and the staff status pill reads *Auto-refresh*.
 
 ### Verified
 `npm run test:concurrency` runs the services against PostgreSQL and checks:

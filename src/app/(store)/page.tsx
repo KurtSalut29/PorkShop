@@ -142,7 +142,7 @@ async function PriceBoard() {
                 className="grid grid-cols-[1fr_auto] items-center gap-x-4 px-4 py-2.5 transition-colors hover:bg-white/[0.04] sm:grid-cols-[1.3fr_1fr_auto]"
               >
                 <span className="min-w-0">
-                  <span className="display-wide block truncate text-[15px] text-white uppercase">
+                  <span className="display-wide block text-[15px] text-white uppercase">
                     {p.localName ?? p.name.replace(/^Pork\s+/i, "")}
                   </span>
                   <span className="block truncate text-xs text-white/45">{p.name}</span>

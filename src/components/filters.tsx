@@ -58,18 +58,18 @@ export function SelectFilter({
 export function DateRangeFilter({ basePath, from, to }: { basePath: string; from: string; to: string }) {
   const set = useFilterNavigation(basePath);
   return (
-    <div className="flex gap-2">
-      <div className="grid gap-1.5">
+    <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+      <div className="grid min-w-0 gap-1.5">
         <Label htmlFor="f-from" className="text-xs text-muted-foreground">
           From
         </Label>
-        <Input id="f-from" type="date" defaultValue={from} max={to} onChange={(e) => e.target.value && set("from", e.target.value)} className="num w-40" />
+        <Input id="f-from" type="date" defaultValue={from} max={to} onChange={(e) => e.target.value && set("from", e.target.value)} className="num w-full sm:w-40" />
       </div>
-      <div className="grid gap-1.5">
+      <div className="grid min-w-0 gap-1.5">
         <Label htmlFor="f-to" className="text-xs text-muted-foreground">
           To
         </Label>
-        <Input id="f-to" type="date" defaultValue={to} min={from} onChange={(e) => e.target.value && set("to", e.target.value)} className="num w-40" />
+        <Input id="f-to" type="date" defaultValue={to} min={from} onChange={(e) => e.target.value && set("to", e.target.value)} className="num w-full sm:w-40" />
       </div>
     </div>
   );

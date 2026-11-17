@@ -47,7 +47,7 @@ export function OrderProgress({ order, audience = "customer" }: { order: OrderVi
     { key: "assigned", label: "Assigned to staff", staffLabel: "Assigned", stamp: order.assignedAt },
     { key: "prepared", label: "Prepared", staffLabel: "Prepared", stamp: order.processingAt },
     { key: "ready", label: "Ready for pickup", staffLabel: "Ready", stamp: order.readyAt },
-    { key: "done", label: "Picked up", staffLabel: "Completed", stamp: order.completedAt },
+    { key: "done", label: "Picked up", staffLabel: "Picked up", stamp: order.completedAt },
   ];
   // The last step the order has reached.
   const reached = { AWAITING_PAYMENT: 0, PENDING: 1, ASSIGNED: 2, PROCESSING: 2, READY: 4, COMPLETED: 5 }[order.status];
@@ -60,7 +60,7 @@ export function OrderProgress({ order, audience = "customer" }: { order: OrderVi
   };
 
   return (
-    <ol className="grid grid-cols-6 gap-1" aria-label="Order progress">
+    <ol className="grid grid-cols-6 gap-0.5 sm:gap-1" aria-label="Order progress">
       {steps.map((step, i) => {
         const done = i <= reached;
         const current = i === reached + 1 && order.status !== "COMPLETED";
@@ -84,11 +84,11 @@ export function OrderProgress({ order, audience = "customer" }: { order: OrderVi
             >
               {done && !step.warn ? <Check className="size-3.5" strokeWidth={3} /> : i + 1}
             </span>
-            <span className={cn("mt-2 text-[11px] leading-tight font-medium sm:text-xs", !done && !current && "text-muted-foreground")}>
+            <span className={cn("mt-2 text-[10px] leading-tight font-medium tracking-tight max-[359px]:text-[9px] sm:text-xs sm:tracking-normal", !done && !current && "text-muted-foreground")}>
               {audience === "customer" ? step.label : step.staffLabel}
             </span>
             {caption ? (
-              <span className={cn("mt-0.5 text-[10px] leading-tight sm:text-[11px]", step.warn ? "font-medium text-destructive" : current ? "font-medium text-primary" : "text-muted-foreground")}>
+              <span className={cn("mt-0.5 text-[10px] leading-tight max-[359px]:text-[9px] sm:text-[11px]", step.warn ? "font-medium text-destructive" : current ? "font-medium text-primary" : "text-muted-foreground")}>
                 {caption}
               </span>
             ) : (
@@ -105,27 +105,30 @@ export function OrderProgress({ order, audience = "customer" }: { order: OrderVi
 export function OrderItemsTable({ order }: { order: OrderView }) {
   const weighed = order.items.some((i) => i.actualQty !== null);
   return (
-    <div className="overflow-x-auto">
+    <div className="relative overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b bg-muted/50 text-left text-[11px] tracking-wider text-muted-foreground uppercase">
-            <th className="px-5 py-2.5 font-semibold">Product</th>
-            <th className="px-3 py-2.5 text-right font-semibold">Ordered</th>
-            {weighed && <th className="px-3 py-2.5 text-right font-semibold">Actual</th>}
-            <th className="px-3 py-2.5 text-right font-semibold">Price</th>
-            <th className="px-5 py-2.5 text-right font-semibold">Amount</th>
+            <th className="px-4 py-2.5 font-semibold sm:px-5">Product</th>
+            <th className="px-2 py-2.5 text-right font-semibold sm:px-3">Ordered</th>
+            {weighed && <th className="px-2 py-2.5 text-right font-semibold sm:px-3">Actual</th>}
+            <th className="hidden px-3 py-2.5 text-right font-semibold sm:table-cell">Price</th>
+            <th className="px-4 py-2.5 text-right font-semibold sm:px-5">Amount</th>
           </tr>
         </thead>
         <tbody className="divide-y">
           {order.items.map((i) => (
             <tr key={i.id}>
-              <td className="px-5 py-3 font-medium">{i.productName}</td>
-              <td className="num px-3 py-3 text-right">{formatQty(i.orderedQty, i.unit)}</td>
+              <td className="px-4 py-3 font-medium sm:px-5">
+                {i.productName}
+                <span className="num block text-xs font-normal text-muted-foreground sm:hidden">{formatUnitPrice(i.unitPrice, i.unit)}</span>
+              </td>
+              <td className="num px-2 py-3 text-right whitespace-nowrap sm:px-3">{formatQty(i.orderedQty, i.unit)}</td>
               {weighed && (
-                <td className="num px-3 py-3 text-right">{i.actualQty !== null ? formatQty(i.actualQty, i.unit) : "—"}</td>
+                <td className="num px-2 py-3 text-right whitespace-nowrap sm:px-3">{i.actualQty !== null ? formatQty(i.actualQty, i.unit) : "—"}</td>
               )}
-              <td className="num px-3 py-3 text-right text-muted-foreground">{formatUnitPrice(i.unitPrice, i.unit)}</td>
-              <td className="num px-5 py-3 text-right font-medium">{formatPeso(i.finalTotal ?? i.estimatedTotal)}</td>
+              <td className="num hidden px-3 py-3 text-right text-muted-foreground sm:table-cell">{formatUnitPrice(i.unitPrice, i.unit)}</td>
+              <td className="num px-4 py-3 text-right font-medium whitespace-nowrap sm:px-5">{formatPeso(i.finalTotal ?? i.estimatedTotal)}</td>
             </tr>
           ))}
         </tbody>

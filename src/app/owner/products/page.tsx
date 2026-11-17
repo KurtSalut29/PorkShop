@@ -58,7 +58,7 @@ export default async function OwnerProductsPage({ searchParams }: PageProps<"/ow
             {showArchived ? "No archived products." : "No products yet. Add your first cut."}
           </p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto">
             <table className="w-full min-w-[820px] text-sm">
               <thead>
                 <tr className="border-b bg-muted/50 text-left text-[11px] tracking-wider text-muted-foreground uppercase">

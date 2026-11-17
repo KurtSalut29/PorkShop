@@ -30,7 +30,9 @@ export async function GET(request: Request) {
           cleanup();
         }
       };
-      send("retry: 3000\n: connected\n\n");
+      // A real message, not a comment, so the browser can tell a working stream from one a
+      // proxy is holding back (Cloudflare quick tunnels buffer streams; see realtime-listener).
+      send(`retry: 3000\ndata: ${JSON.stringify({ kind: "hello" })}\n\n`);
 
       const unsubscribe = realtimeHub.subscribe((event: RealtimeEvent) => {
         if (!event.topics.some((t) => topics.has(t))) return;

@@ -23,7 +23,7 @@ export default async function WorkersPage() {
         {workers.length === 0 ? (
           <EmptyState icon={Users} title="No workers yet" description="Add your first worker so orders can be assigned." />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto">
             <table className="w-full min-w-[820px] text-sm">
               <thead>
                 <tr className="border-b bg-muted/50 text-left text-[11px] tracking-wider text-muted-foreground uppercase">

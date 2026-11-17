@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 type Incoming = { kind: string; toast?: { title: string; body?: string; href?: string } };
-export type LiveStatus = "connecting" | "live" | "reconnecting" | "offline";
+export type LiveStatus = "connecting" | "live" | "polling" | "reconnecting" | "offline";
 
 // ── Tiny shared store so any component can show the connection state ──
 let status: LiveStatus = "connecting";
@@ -25,6 +25,10 @@ export function useLiveStatus() {
 }
 
 const CONNECTION_TOAST = "realtime-connection";
+/** The server greets every stream at once; silence this long means a proxy is holding it back. */
+const HELLO_TIMEOUT = 10_000;
+/** Without a live stream, the screen re-checks the server this often while it is visible. */
+const POLL_EVERY = 10_000;
 
 /**
  * Keeps every open screen in sync. When the server announces a change (new order, stock
@@ -40,26 +44,47 @@ export function RealtimeListener() {
     let closed = false;
     let warned = false;
     let lostTimer: ReturnType<typeof setTimeout> | null = null;
+    let helloTimer: ReturnType<typeof setTimeout> | null = null;
+    let poller: ReturnType<typeof setInterval> | null = null;
+
+    // Some tunnels (e.g. Cloudflare quick tunnels used for demos) hold a stream back until it
+    // ends, so the connection opens but no update ever arrives. Then fall back to re-checking
+    // the server every few seconds: slower, but every screen still stays up to date.
+    const startPolling = () => {
+      source?.close();
+      source = null;
+      if (poller) return;
+      setStatus("polling");
+      poller = setInterval(() => {
+        if (document.visibilityState === "visible") router.refresh();
+      }, POLL_EVERY);
+    };
 
     const connect = () => {
       source = new EventSource("/api/events");
       source.onopen = () => {
         if (lostTimer) clearTimeout(lostTimer);
-        setStatus("live");
-        if (warned) {
-          warned = false;
-          toast.success("Live updates restored", {
-            id: CONNECTION_TOAST,
-            description: "You're seeing the latest orders and stock again.",
-          });
-          router.refresh();
-        }
+        if (helloTimer) clearTimeout(helloTimer);
+        helloTimer = setTimeout(startPolling, HELLO_TIMEOUT);
       };
       source.onmessage = (e) => {
         let data: Incoming;
         try {
           data = JSON.parse(e.data);
         } catch {
+          return;
+        }
+        if (data.kind === "hello") {
+          if (helloTimer) clearTimeout(helloTimer);
+          setStatus("live");
+          if (warned) {
+            warned = false;
+            toast.success("Live updates restored", {
+              id: CONNECTION_TOAST,
+              description: "You're seeing the latest orders and stock again.",
+            });
+            router.refresh();
+          }
           return;
         }
         if (data.toast) {
@@ -72,12 +97,13 @@ export function RealtimeListener() {
         timer.current = setTimeout(() => router.refresh(), 250);
       };
       source.onerror = () => {
-        if (closed) return;
+        if (closed || poller) return;
+        if (helloTimer) clearTimeout(helloTimer);
         setStatus(navigator.onLine ? "reconnecting" : "offline");
         // Brief blips are normal (e.g. server restart); only warn if it lasts.
         lostTimer ??= setTimeout(() => {
           lostTimer = null;
-          if (status === "live" || closed) return;
+          if (status === "live" || closed || poller) return;
           warned = true;
           toast.warning("Live updates paused", {
             id: CONNECTION_TOAST,
@@ -114,6 +140,8 @@ export function RealtimeListener() {
       closed = true;
       source?.close();
       if (lostTimer) clearTimeout(lostTimer);
+      if (helloTimer) clearTimeout(helloTimer);
+      if (poller) clearInterval(poller);
       if (timer.current) clearTimeout(timer.current);
       window.removeEventListener("offline", onOffline);
       window.removeEventListener("online", onOnline);
@@ -127,6 +155,7 @@ export function RealtimeListener() {
 const LABEL: Record<LiveStatus, string> = {
   connecting: "Connecting",
   live: "Live",
+  polling: "Auto-refresh",
   reconnecting: "Reconnecting",
   offline: "Offline",
 };
@@ -138,14 +167,20 @@ export function LiveIndicator({ className }: { className?: string }) {
     <span
       className={cn(
         "inline-flex h-7 items-center gap-1.5 rounded-full border px-2.5 text-xs font-medium",
-        s === "live" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : s === "offline" ? "border-red-200 bg-red-50 text-red-800" : "border-amber-200 bg-amber-50 text-amber-800",
+        s === "live" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : s === "polling" ? "border-sky-200 bg-sky-50 text-sky-800" : s === "offline" ? "border-red-200 bg-red-50 text-red-800" : "border-amber-200 bg-amber-50 text-amber-800",
         className,
       )}
       role="status"
       aria-live="polite"
-      title={s === "live" ? "Changes from other devices appear instantly" : "Live updates are not connected"}
+      title={
+        s === "live"
+          ? "Changes from other devices appear instantly"
+          : s === "polling"
+            ? "This connection can't stream updates, so the screen refreshes every 10 seconds"
+            : "Live updates are not connected"
+      }
     >
-      <span className={cn("size-1.5 rounded-full", s === "live" ? "live-dot bg-emerald-500" : s === "offline" ? "bg-red-500" : "bg-amber-500")} />
+      <span className={cn("size-1.5 rounded-full", s === "live" ? "live-dot bg-emerald-500" : s === "polling" ? "bg-sky-500" : s === "offline" ? "bg-red-500" : "bg-amber-500")} />
       {LABEL[s]}
     </span>
   );

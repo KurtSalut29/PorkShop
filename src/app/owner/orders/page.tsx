@@ -89,7 +89,7 @@ export default async function OwnerOrdersPage({ searchParams }: PageProps<"/owne
         {orders.length === 0 ? (
           <EmptyState icon={ClipboardList} title="No orders here" description="Try another status or clear the search." />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto">
             <table className="w-full min-w-[900px] text-sm">
               <thead>
                 <tr className="border-b bg-muted/50 text-left text-[11px] tracking-wider text-muted-foreground uppercase">

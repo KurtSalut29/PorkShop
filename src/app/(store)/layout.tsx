@@ -4,7 +4,7 @@ import { CalendarClock, Scale, Store } from "lucide-react";
 import { Logo } from "@/components/brand";
 import { CartButton } from "@/components/cart/cart-button";
 import { CartProvider } from "@/components/cart/cart-context";
-import { MobileCartBar } from "@/components/cart/mobile-cart-bar";
+import { FloatingCart } from "@/components/cart/floating-cart";
 import { NotificationBell } from "@/components/notification-bell";
 import { Container } from "@/components/page";
 import { RealtimeListener } from "@/components/realtime-listener";
@@ -94,7 +94,7 @@ export default function StoreLayout({ children }: LayoutProps<"/">) {
         <Container>
           <div className="pointer-events-auto rounded-2xl border border-black/[0.06] bg-card/95 shadow-[0_1px_2px_rgb(36_19_15/0.06),0_12px_32px_-12px_rgb(36_19_15/0.26)] backdrop-blur-xl backdrop-saturate-150">
             <div className="flex h-16 items-center gap-4 pr-2.5 pl-3.5 sm:gap-8 sm:pr-3 sm:pl-5">
-              <Logo href="/" />
+              <Logo href="/" className="max-[359px]:[&>span]:hidden" />
               <StoreNav />
               <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
                 <CartButton />
@@ -111,7 +111,7 @@ export default function StoreLayout({ children }: LayoutProps<"/">) {
         {children}
       </main>
       <footer className="mt-20 bg-night text-white/70">
-        <Container className="grid gap-10 py-12 text-sm sm:grid-cols-[1.4fr_1fr_1fr]">
+        <Container className="grid gap-10 pt-12 pb-28 text-sm sm:grid-cols-[1.4fr_1fr_1fr]">
           <div>
             <Logo href="/" inverted />
             <p className="mt-4 max-w-xs leading-relaxed">
@@ -136,7 +136,7 @@ export default function StoreLayout({ children }: LayoutProps<"/">) {
           </div>
         </Container>
       </footer>
-      <MobileCartBar />
+      <FloatingCart />
     </CartProvider>
   );
 }

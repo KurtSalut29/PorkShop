@@ -11,7 +11,7 @@ export function TransactionsTable({ txns, orderHref }: { txns: StockTxnView[]; o
     return <EmptyState icon={History} title="No stock movements" description="Nothing matches these filters yet." />;
   }
   return (
-    <div className="overflow-x-auto">
+    <div className="relative overflow-x-auto">
       <table className="w-full min-w-[820px] text-sm">
         <thead>
           <tr className="border-b bg-muted/50 text-left text-[11px] tracking-wider text-muted-foreground uppercase">

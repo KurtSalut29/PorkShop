@@ -23,6 +23,7 @@ This guide takes you from a brand-new laptop to Piraso running at **http://local
 7. [Build and start Piraso](#part-7--build-and-start-piraso)
 8. [Sign in and set up your shop](#part-8--sign-in-and-set-up-your-shop)
 - [Everyday use](#everyday-use-starting-and-stopping)
+- [Opening Piraso on other devices (demos and panelists)](#opening-piraso-on-other-devices-demos-and-panelists)
 - [Getting updates](#getting-updates)
 - [Backing up and restoring your data](#backing-up-and-restoring-your-data)
 - [Troubleshooting](#troubleshooting)
@@ -265,7 +266,7 @@ open **http://localhost:3000** in your browser. 🎉
 
 **Keep this terminal window open** while you use Piraso; closing it stops the app. To stop Piraso, click the terminal and press **Ctrl + C**.
 
-> Always open Piraso at exactly `http://localhost:3000`. Signing in won't work at `http://127.0.0.1:3000` or any other address.
+> To open Piraso on other phones and laptops (for example, panelists during a demo) without deploying it, see [Opening Piraso on other devices](#opening-piraso-on-other-devices-demos-and-panelists).
 
 ---
 
@@ -315,6 +316,63 @@ The sample orders and sales history are there for practice. Ask your developer f
 **To stop Piraso:** press **Ctrl + C** in the terminal. You can leave the database running, or stop it with `docker compose stop`. Shutting down the laptop is also safe; your data is kept.
 
 You only need `npm run build` again after [getting updates](#getting-updates).
+
+---
+
+## Opening Piraso on other devices (demos and panelists)
+
+Piraso doesn't have to be deployed for other people to use it. While it runs on your laptop, phones and laptops can open it in two ways:
+
+| | A. Same Wi-Fi | B. Internet link (Cloudflare tunnel) |
+|---|---|---|
+| Who can open it | Devices on the same Wi-Fi or hotspot as your laptop | Anyone with the link, on any network |
+| Address | `http://192.168.x.x:3000` (your laptop's address) | `https://some-random-words.trycloudflare.com` |
+| Needs | Nothing extra | The free `cloudflared` program; no account |
+| Live updates | Instant (status pill: **Live**) | Every 10 seconds (status pill: **Auto-refresh**) |
+
+**Before a demo:**
+
+- Start Piraso with `npm start` ([Part 7](#part-7--build-and-start-piraso)), not `npm run dev`. It's much faster on first load.
+- Keep the laptop plugged in, and turn off sleep for the length of the demo.
+- Open the address on your own phone first, so the first visit is already done.
+- Panelists can tap **Sign up** to make their own customer accounts. Share the owner and worker logins only with the people who need them.
+
+### A. Same Wi-Fi
+
+1. Connect your laptop and the other devices to the **same Wi-Fi** (or turn on your phone's hotspot and connect everyone to it).
+2. Start Piraso. The terminal shows your laptop's address on the **Network** line:
+
+   ```
+   - Local:         http://localhost:3000
+   - Network:       http://192.168.1.23:3000
+   ```
+
+   No Network line? Find the address with `ipconfig` (Windows, look for **IPv4 Address**) or `ipconfig getifaddr en0` (macOS).
+3. On the other devices, open that Network address, for example `http://192.168.1.23:3000`.
+4. **Windows:** the first time, a *Windows Defender Firewall* window asks about **Node.js**. Tick **Private networks** and click **Allow access**. If the window never appeared and other devices can't connect, open *Settings* → *Network & internet* → *Wi-Fi* → your network, and set it to **Private network**.
+
+> **School or office Wi-Fi often blocks devices from reaching each other.** If the page never loads on the other devices, use a phone hotspot or option B.
+
+### B. Internet link (Cloudflare tunnel)
+
+1. **Install `cloudflared` (one time).**
+   - **Windows:** `winget install --id Cloudflare.cloudflared`, then close and reopen the terminal.
+   - **macOS:** `brew install cloudflared`.
+2. Start Piraso (`npm start`) and leave that terminal open.
+3. Open a **second** terminal and run:
+
+   ```bash
+   cloudflared tunnel --url http://localhost:3000
+   ```
+
+4. After a few seconds it prints a box with a link like `https://some-random-words.trycloudflare.com`. Send that link to the panelists. It can take up to a minute before the link starts working.
+5. After the demo, press **Ctrl + C** in the tunnel terminal. The link stops working immediately.
+
+Things to know:
+- **You get a new link every time** you start the tunnel, so share it on the day.
+- **Anyone with the link can open Piraso.** Change the sample owner password first (*Profile & password*), and close the tunnel when you're done.
+- **Updates arrive within 10 seconds instead of instantly.** These quick links can't stream live updates, so open screens refresh on their own every 10 seconds. The staff status pill shows **Auto-refresh**; this is expected.
+- **The link shows a Cloudflare "404 Not Found" page?** You have a `config.yml` for another tunnel in your `.cloudflared` folder, and it takes over. Start the quick tunnel with an empty settings file instead. On Windows, run `New-Item -Force empty-tunnel.yml` once, then `cloudflared tunnel --config empty-tunnel.yml --url http://localhost:3000`. On macOS, run `touch empty-tunnel.yml` once, then the same `cloudflared` command.
 
 ---
 
@@ -385,7 +443,8 @@ Find the message you see, then follow the fix.
 | `Conflict. The container name "/porkshop-db" is already in use` | An older copy of the database container exists. Run `docker rm -f porkshop-db`, then `docker compose up -d`. This doesn't delete your data. |
 | `Can't reach database server at localhost:5433` | The database isn't running. Open Docker Desktop, then run `docker compose up -d` and wait for **(healthy)** in `docker ps`. |
 | `Error: listen EADDRINUSE: address already in use :::3000` | Port 3000 is in use (often Piraso is already running in another terminal). Close the other one, or run on another port: change both `localhost:3000` addresses in `.env` to `localhost:3001`, run `npm start -- -p 3001`, and open http://localhost:3001. |
-| The sign-in button does nothing, or sign-in fails with a correct password | Make sure the address in your browser exactly matches `BETTER_AUTH_URL` in `.env` (normally `http://localhost:3000`, not `127.0.0.1`). If you edited `.env`, stop Piraso with **Ctrl + C** and run `npm start` again. |
+| The sign-in button does nothing, or sign-in fails with a correct password | Stop Piraso with **Ctrl + C**, run `npm run build` and `npm start` again, then reload the page. If you edited `.env`, the restart is needed for the change to apply. |
+| Other devices can't open Piraso | See [Opening Piraso on other devices](#opening-piraso-on-other-devices-demos-and-panelists). On the same Wi-Fi, allow **Node.js** through the Windows firewall; on school Wi-Fi, use a hotspot or a tunnel link. |
 | Pages show *"Something went wrong"* or keep loading | The database probably stopped. Open Docker Desktop, run `docker compose up -d`, and refresh the page. |
 | `npm run build` fails | Make sure the database is running (`docker ps` shows **porkshop-db (healthy)**), then run `npm run build` again. |
 | `npm install` fails with network or `ETIMEDOUT` errors | Check your internet connection and run `npm install` again. It continues where it stopped. |

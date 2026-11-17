@@ -125,7 +125,7 @@ export default async function OwnerDashboard() {
             </Link>
           }
         >
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto">
             <table className="w-full min-w-[640px] text-sm">
               <tbody className="divide-y">
                 {d.recentOrders.map((o) => (

@@ -33,10 +33,10 @@ export function StaffOrderDetail({
         description={`Placed ${formatDateTime(order.createdAt)}`}
         actions={actions}
       />
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-6">
           <Section>
-            <div className="p-5 sm:p-6">
+            <div className="px-2 py-5 sm:p-6">
               <OrderProgress order={order} audience="staff" />
             </div>
           </Section>

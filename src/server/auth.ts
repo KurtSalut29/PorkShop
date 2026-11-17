@@ -8,6 +8,15 @@ import { db } from "./db";
 export const auth = betterAuth({
   appName: "Piraso",
   database: prismaAdapter(db, { provider: "postgresql" }),
+  // Sign-in works from whatever address the app was opened with (localhost, this laptop's
+  // Wi-Fi address, or a tunnel URL), not only BETTER_AUTH_URL. Requests from other sites are
+  // still refused: a browser's Origin only matches the host it actually sent the request to.
+  trustedOrigins: (request) => {
+    const host = request?.headers.get("x-forwarded-host") ?? request?.headers.get("host");
+    if (!host) return [];
+    const proto = request?.headers.get("x-forwarded-proto") ?? new URL(request!.url).protocol.replace(":", "");
+    return [`${proto.split(",")[0].trim()}://${host.split(",")[0].trim()}`];
+  },
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
