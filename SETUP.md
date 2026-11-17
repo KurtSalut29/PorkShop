@@ -266,6 +266,8 @@ open **http://localhost:3000** in your browser. 🎉
 
 **Keep this terminal window open** while you use Piraso; closing it stops the app. To stop Piraso, click the terminal and press **Ctrl + C**.
 
+**Windows:** the first time, a *Windows Defender Firewall* window may ask about **Node.js**. Tick **Private networks** and click **Allow access**. This only matters if phones or other laptops will open Piraso; it's safe either way.
+
 > To open Piraso on other phones and laptops (for example, panelists during a demo) without deploying it, see [Opening Piraso on other devices](#opening-piraso-on-other-devices-demos-and-panelists).
 
 ---
@@ -355,24 +357,62 @@ Piraso doesn't have to be deployed for other people to use it. While it runs on 
 
 ### B. Internet link (Cloudflare tunnel)
 
-1. **Install `cloudflared` (one time).**
-   - **Windows:** `winget install --id Cloudflare.cloudflared`, then close and reopen the terminal.
-   - **macOS:** `brew install cloudflared`.
-2. Start Piraso (`npm start`) and leave that terminal open.
-3. Open a **second** terminal and run:
+**1. Install `cloudflared` (one time).**
 
-   ```bash
-   cloudflared tunnel --url http://localhost:3000
-   ```
+- **Windows:** in PowerShell, run
 
-4. After a few seconds it prints a box with a link like `https://some-random-words.trycloudflare.com`. Send that link to the panelists. It can take up to a minute before the link starts working.
-5. After the demo, press **Ctrl + C** in the tunnel terminal. The link stops working immediately.
+  ```powershell
+  winget install --id Cloudflare.cloudflared
+  ```
+
+  Type **Y** if it asks to accept the terms. If `winget` *is not recognized* (older Windows 10), download **cloudflared-windows-amd64.msi** from https://github.com/cloudflare/cloudflared/releases/latest and run it instead.
+- **macOS:** run `brew install cloudflared`. No `brew`? Install Homebrew first from https://brew.sh.
+
+**Close the terminal and open a new one**, then check the install:
+
+```bash
+cloudflared --version
+```
+
+It should print a version, such as `cloudflared version 2026.11.0`.
+
+**2. Start Piraso** in the first terminal, as usual:
+
+```bash
+cd ~/Projects/PorkShop
+npm start
+```
+
+Leave this terminal open.
+
+**3. Open a second terminal** and start the tunnel:
+
+```bash
+cd ~/Projects/PorkShop
+npm run tunnel
+```
+
+**4. Copy the link.** After a few seconds the terminal shows a box like this:
+
+```
++--------------------------------------------------------------------------------------------+
+|  Your quick Tunnel has been created! Visit it at (it may take some time to be reachable):  |
+|  https://some-random-words.trycloudflare.com                                               |
++--------------------------------------------------------------------------------------------+
+```
+
+Open that link on your phone first. **It can take up to a minute to start working**; if the phone says the site can't be reached, wait a little and reload. Then send the link to the panelists.
+
+The terminal keeps printing lines that start with `INF`, `WRN` or `ERR`, such as *"no uptime guarantee"* or `ERR Request failed ... /api/events`. They're normal (the `/api/events` ones appear whenever someone closes or leaves a page); leave the window open.
+
+**5. When the demo is over,** press **Ctrl + C** in the tunnel terminal. The link stops working immediately.
 
 Things to know:
-- **You get a new link every time** you start the tunnel, so share it on the day.
-- **Anyone with the link can open Piraso.** Change the sample owner password first (*Profile & password*), and close the tunnel when you're done.
-- **Updates arrive within 10 seconds instead of instantly.** These quick links can't stream live updates, so open screens refresh on their own every 10 seconds. The staff status pill shows **Auto-refresh**; this is expected.
-- **The link shows a Cloudflare "404 Not Found" page?** You have a `config.yml` for another tunnel in your `.cloudflared` folder, and it takes over. Start the quick tunnel with an empty settings file instead. On Windows, run `New-Item -Force empty-tunnel.yml` once, then `cloudflared tunnel --config empty-tunnel.yml --url http://localhost:3000`. On macOS, run `touch empty-tunnel.yml` once, then the same `cloudflared` command.
+- **You get a new link every time** you run `npm run tunnel`, so share it on the day.
+- **Anyone with the link can open Piraso.** Change the sample owner password first (*Profile & password*), and stop the tunnel when you're done.
+- **Updates arrive within 10 seconds instead of instantly.** Tunnel links can't stream live updates, so open screens refresh on their own every 10 seconds. The staff status pill shows **Auto-refresh**; this is expected.
+- **Both terminals must stay open**, and the laptop must stay online and awake.
+- **Running Piraso on another port** (for example 3001)? Start the tunnel with `cloudflared tunnel --config quick-tunnel.yml --url http://localhost:3001` instead.
 
 ---
 
@@ -444,6 +484,9 @@ Find the message you see, then follow the fix.
 | `Can't reach database server at localhost:5433` | The database isn't running. Open Docker Desktop, then run `docker compose up -d` and wait for **(healthy)** in `docker ps`. |
 | `Error: listen EADDRINUSE: address already in use :::3000` | Port 3000 is in use (often Piraso is already running in another terminal). Close the other one, or run on another port: change both `localhost:3000` addresses in `.env` to `localhost:3001`, run `npm start -- -p 3001`, and open http://localhost:3001. |
 | The sign-in button does nothing, or sign-in fails with a correct password | Stop Piraso with **Ctrl + C**, run `npm run build` and `npm start` again, then reload the page. If you edited `.env`, the restart is needed for the change to apply. |
+| `'cloudflared' is not recognized` or `cloudflared: command not found` | Close the terminal and open a new one. If it still happens, install it again ([option B, step 1](#b-internet-link-cloudflare-tunnel)). |
+| The tunnel link says *"This site can't be reached"* | Wait a minute and reload: new links take a moment to work. Check that both terminals (`npm start` and `npm run tunnel`) are still running, and use the link from the **latest** `npm run tunnel`; old links stop working. |
+| The tunnel link shows *"Bad gateway"* or error **502** | Piraso isn't running. Start it with `npm start` in the other terminal, wait for **Ready**, and reload the link. |
 | Other devices can't open Piraso | See [Opening Piraso on other devices](#opening-piraso-on-other-devices-demos-and-panelists). On the same Wi-Fi, allow **Node.js** through the Windows firewall; on school Wi-Fi, use a hotspot or a tunnel link. |
 | Pages show *"Something went wrong"* or keep loading | The database probably stopped. Open Docker Desktop, run `docker compose up -d`, and refresh the page. |
 | `npm run build` fails | Make sure the database is running (`docker ps` shows **porkshop-db (healthy)**), then run `npm run build` again. |

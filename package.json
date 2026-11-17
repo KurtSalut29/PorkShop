@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "tunnel": "cloudflared tunnel --config quick-tunnel.yml --url http://localhost:3000",
     "lint": "eslint",
     "db:up": "docker compose up -d",
     "db:migrate": "prisma migrate dev",

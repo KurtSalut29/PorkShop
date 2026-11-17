@@ -1,0 +1,3 @@
+# Settings for `npm run tunnel` (a Cloudflare quick tunnel; see SETUP.md).
+# Deliberately empty: it stops cloudflared from reading another tunnel's
+# config.yml on this computer, which would answer every request with 404.
