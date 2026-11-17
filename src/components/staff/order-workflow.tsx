@@ -213,16 +213,45 @@ function WeighForm({ order, onHold }: { order: OrderView; onHold: boolean }) {
 
 function HandoverForm({ order }: { order: OrderView }) {
   const confirm = useConfirm();
-  const [method, setMethod] = useState<PaymentMethod>(order.paymentMethod ?? "CASH");
+  const [method, setMethod] = useState<PaymentMethod>(order.paymentMethod === "GCASH" ? "CASH" : (order.paymentMethod ?? "CASH"));
   const [pending, startTransition] = useTransition();
-  const alreadyPaid = order.paymentStatus === "PAID";
+  const unverified = order.paymentStatus === "SUBMITTED";
+  // A verified GCash prepayment covers the estimate; the weighed total may differ slightly.
+  const prepaid = order.paymentStatus === "PAID" ? (order.amountPaid ?? order.total) : 0;
+  const balance = Math.round((order.total - prepaid) * 100) / 100;
+  const alreadyPaid = order.paymentStatus === "PAID" && balance <= 0;
+  const collect = order.paymentStatus === "PAID" ? Math.max(0, balance) : order.total;
+
+  if (unverified) {
+    return (
+      <Panel icon={HandCoins} title="Hand over & take payment" tone="emerald">
+        <p className="flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2.5 text-sm text-amber-900">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+          Verify the customer’s GCash payment above before handing over the order.
+        </p>
+      </Panel>
+    );
+  }
 
   return (
     <Panel icon={HandCoins} title="Hand over & take payment" tone="emerald">
       <div className="scale-display rounded-xl px-4 py-3 text-center">
-        <p className="text-[11px] tracking-[0.2em] uppercase opacity-70">{alreadyPaid ? "Already paid" : "Amount to collect"}</p>
-        <p className="mt-1 text-4xl font-semibold">{formatPeso(order.total)}</p>
+        <p className="text-[11px] tracking-[0.2em] uppercase opacity-70">
+          {alreadyPaid ? (balance < 0 ? "Paid · give back" : "Fully paid") : prepaid ? "Balance to collect" : "Amount to collect"}
+        </p>
+        <p className="mt-1 text-4xl font-semibold">{formatPeso(alreadyPaid ? Math.abs(balance) : collect)}</p>
       </div>
+      {prepaid > 0 && (
+        <p className="mt-2 text-center text-xs text-muted-foreground">
+          Weighed total {formatPeso(order.total)} · paid by GCash {formatPeso(prepaid)}
+          {balance < 0 && " · return the difference to the customer"}
+        </p>
+      )}
+      {order.paymentMethod === "GCASH" && order.paymentStatus !== "PAID" && (
+        <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          The GCash payment wasn’t verified, so collect the full amount now.
+        </p>
+      )}
       {!alreadyPaid && (
         <fieldset className="mt-4">
           <legend className="mb-2 text-sm font-medium">Paid with</legend>
@@ -252,12 +281,17 @@ function HandoverForm({ order }: { order: OrderView }) {
           const ok = await confirm({
             title: alreadyPaid ? "Confirm the customer picked up the order?" : "Confirm payment and pickup?",
             description: alreadyPaid
-              ? "This completes the order."
+              ? balance < 0
+                ? `Give the customer ${formatPeso(Math.abs(balance))} back, then complete the order.`
+                : "This completes the order."
               : "Only confirm after you’ve received the money. This completes the order and records the payment in sales.",
             details: [
               { label: "Order", value: orderCode(order.number) },
               { label: "Customer", value: order.customer.name },
-              { label: alreadyPaid ? "Paid" : "Collect", value: formatPeso(order.total) },
+              ...(prepaid ? [{ label: "Paid by GCash", value: formatPeso(prepaid) }] : []),
+              alreadyPaid
+                ? { label: balance < 0 ? "Give back" : "Balance", value: formatPeso(Math.abs(balance)) }
+                : { label: "Collect", value: formatPeso(collect) },
               ...(alreadyPaid ? [] : [{ label: "Method", value: PAYMENT_METHOD_LABEL[method] }]),
             ],
             confirmLabel: alreadyPaid ? "Complete order" : "Payment received",

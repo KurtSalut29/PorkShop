@@ -8,6 +8,12 @@ const orderInclude = {
   items: { orderBy: { productName: "asc" } },
   customer: { select: { id: true, name: true, phone: true, email: true } },
   worker: { select: { id: true, name: true, dutyStatus: true, active: true } },
+  // GCash proofs without the image bytes (served separately by /api/payment-proofs/[id]).
+  proofs: {
+    orderBy: { createdAt: "desc" },
+    take: 1,
+    select: { id: true, reference: true, amount: true, status: true, note: true, createdAt: true, reviewedAt: true },
+  },
 } satisfies Prisma.OrderInclude;
 
 type OrderRow = Prisma.OrderGetPayload<{ include: typeof orderInclude }>;
@@ -25,6 +31,21 @@ export function toOrderView(o: OrderRow) {
     total: (o.finalTotal ?? o.estimatedTotal).toNumber(),
     paymentStatus: o.paymentStatus,
     paymentMethod: o.paymentMethod,
+    amountPaid: o.amountPaid?.toNumber() ?? null,
+    paymentDueAt: o.paymentDueAt?.toISOString() ?? null,
+    pickupDeadline: o.pickupDeadline?.toISOString() ?? null,
+    /** The most recent GCash proof of payment, if any. */
+    proof: o.proofs[0]
+      ? {
+          id: o.proofs[0].id,
+          reference: o.proofs[0].reference,
+          amount: o.proofs[0].amount.toNumber(),
+          status: o.proofs[0].status as "SUBMITTED" | "ACCEPTED" | "REJECTED",
+          note: o.proofs[0].note,
+          createdAt: o.proofs[0].createdAt.toISOString(),
+          imageUrl: `/api/payment-proofs/${o.proofs[0].id}`,
+        }
+      : null,
     cancelRequest: o.cancelRequest,
     cancelReason: o.cancelReason,
     createdAt: o.createdAt.toISOString(),
@@ -129,7 +150,8 @@ export async function listOrders(filters: {
   if (filters.status === "ACTIVE") where.status = { in: ACTIVE_STATUSES as OrderStatus[] };
   else if (filters.status && filters.status !== "ALL") where.status = filters.status as OrderStatus;
   if (filters.workerId) where.workerId = filters.workerId === "none" ? null : filters.workerId;
-  if (filters.attention) where.cancelRequest = "PENDING";
+  // Needs a decision from the owner: a cancellation request or a GCash payment to verify.
+  if (filters.attention) where.AND = [{ OR: [{ cancelRequest: "PENDING" }, { paymentStatus: "SUBMITTED" }] }];
   if (filters.q) {
     const n = Number(filters.q.replace(/[^0-9]/g, ""));
     where.OR = [
@@ -152,7 +174,9 @@ export const getOrderForOwner = (orderId: string) => withEvents({ id: orderId })
 export async function orderStatusCounts() {
   const rows = await db.order.groupBy({ by: ["status"], _count: { _all: true } });
   const counts = Object.fromEntries(rows.map((r) => [r.status, r._count._all])) as Partial<Record<OrderStatus, number>>;
-  const attention = await db.order.count({ where: { cancelRequest: "PENDING" } });
+  const attention = await db.order.count({
+    where: { OR: [{ cancelRequest: "PENDING" }, { paymentStatus: "SUBMITTED", status: { not: "CANCELLED" } }] },
+  });
   return { counts, attention };
 }
 

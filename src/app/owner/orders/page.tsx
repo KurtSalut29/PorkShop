@@ -15,6 +15,7 @@ export const metadata: Metadata = { title: "Orders" };
 
 const TABS: { key: string; label: string }[] = [
   { key: "ACTIVE", label: "Active" },
+  { key: "AWAITING_PAYMENT", label: ORDER_STATUS.AWAITING_PAYMENT.label },
   { key: "PENDING", label: ORDER_STATUS.PENDING.label },
   { key: "ASSIGNED", label: ORDER_STATUS.ASSIGNED.label },
   { key: "PROCESSING", label: ORDER_STATUS.PROCESSING.label },
@@ -34,7 +35,7 @@ export default async function OwnerOrdersPage({ searchParams }: PageProps<"/owne
     listOrders({ status: attention ? "ALL" : status, q, attention }),
     orderStatusCounts(),
   ]);
-  const activeCount = (["PENDING", "ASSIGNED", "PROCESSING", "READY"] as OrderStatus[]).reduce((s, k) => s + (counts[k] ?? 0), 0);
+  const activeCount = (["AWAITING_PAYMENT", "PENDING", "ASSIGNED", "PROCESSING", "READY"] as OrderStatus[]).reduce((s, k) => s + (counts[k] ?? 0), 0);
   const countFor = (key: string) =>
     key === "ACTIVE" ? activeCount : key === "ALL" ? Object.values(counts).reduce((s, n) => s + (n ?? 0), 0) : (counts[key as OrderStatus] ?? 0);
   const href = (params: Record<string, string>) => {

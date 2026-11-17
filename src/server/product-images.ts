@@ -12,11 +12,15 @@ const MIN_EDGE = 300; // smaller than this looks blurry on a product card
 export type UploadedImage = { url: string; imageStyle: ImageStyle; width: number; height: number };
 
 /**
- * Validates and stores a product photo. The file's real format is read from its bytes (the
- * browser's filename and type are not trusted), phone rotation is applied, metadata (including
- * GPS location) is stripped, and the result is re-encoded as WebP at most 1600px on its longest side.
+ * Validates an uploaded image and re-encodes it. The file's real format is read from its bytes
+ * (the browser's filename and type are not trusted), phone rotation is applied, metadata
+ * (including GPS location) is stripped, and the result is WebP at most `maxEdge` px on its longest side.
+ * Shared by product photos, the shop's GCash QR code and customers' GCash receipts.
  */
-export async function saveProductImage(file: Buffer, uploadedBy: string): Promise<UploadedImage> {
+export async function prepareImage(
+  file: Buffer,
+  { maxEdge = MAX_EDGE, minEdge = MIN_EDGE, quality = 86 }: { maxEdge?: number; minEdge?: number; quality?: number } = {},
+) {
   if (file.byteLength === 0) throw new DomainError("That file is empty. Choose a photo and try again.");
   if (file.byteLength > MAX_UPLOAD_BYTES) throw new DomainError("That photo is larger than 10 MB. Choose a smaller one.");
 
@@ -31,15 +35,20 @@ export async function saveProductImage(file: Buffer, uploadedBy: string): Promis
   }
   const w = meta.autoOrient?.width ?? meta.width ?? 0;
   const h = meta.autoOrient?.height ?? meta.height ?? 0;
-  if (Math.max(w, h) < MIN_EDGE) {
-    throw new DomainError(`That photo is only ${w}×${h} px. Use one at least ${MIN_EDGE} px wide so it stays sharp.`);
+  if (Math.max(w, h) < minEdge) {
+    throw new DomainError(`That image is only ${w}×${h} px. Use one at least ${minEdge} px wide so it stays readable.`);
   }
 
-  const { data, info } = await sharp(file, { animated: false })
+  return sharp(file, { animated: false })
     .rotate() // apply the camera's orientation, then drop the EXIF data
-    .resize(MAX_EDGE, MAX_EDGE, { fit: "inside", withoutEnlargement: true })
-    .webp({ quality: 86, effort: 5 })
+    .resize(maxEdge, maxEdge, { fit: "inside", withoutEnlargement: true })
+    .webp({ quality, effort: 5 })
     .toBuffer({ resolveWithObject: true });
+}
+
+/** Validates and stores a product photo (also used for the shop's GCash QR code). */
+export async function saveProductImage(file: Buffer, uploadedBy: string): Promise<UploadedImage> {
+  const { data, info } = await prepareImage(file);
   const imageStyle = await measureStyle(data);
 
   const row = await db.productImage.create({
@@ -68,10 +77,13 @@ export function getProductImage(id: string) {
   return db.productImage.findUnique({ where: { id }, select: { data: true, mimeType: true } });
 }
 
-/** Deletes an uploaded photo once no product uses it any more (e.g. after it was replaced). */
+/** Deletes an uploaded image once no product (or the shop's GCash QR setting) uses it any more. */
 export async function deleteImageIfUnused(url: string | null | undefined) {
   const id = uploadedImageId(url);
   if (!id) return;
-  const inUse = await db.product.count({ where: { imageUrl: url! } });
-  if (!inUse) await db.productImage.deleteMany({ where: { id } });
+  const [products, settings] = await Promise.all([
+    db.product.count({ where: { imageUrl: url! } }),
+    db.shopSettings.count({ where: { gcashQrUrl: url! } }),
+  ]);
+  if (!products && !settings) await db.productImage.deleteMany({ where: { id } });
 }

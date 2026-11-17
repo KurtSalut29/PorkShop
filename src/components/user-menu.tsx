@@ -37,7 +37,7 @@ export function UserMenu({
 
   async function signOut() {
     const ok = await confirm({
-      title: "Sign out of Porkshop?",
+      title: "Sign out of Piraso?",
       description:
         role === "WORKER"
           ? "Your duty status stays as it is. Switch to Off duty first if you're ending your shift, so your unstarted orders go to someone else."

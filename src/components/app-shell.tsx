@@ -201,7 +201,7 @@ function SidebarBrand({ role, home }: { role: Role; home: string }) {
     <Link href={home} className="flex items-center gap-3 rounded-lg outline-offset-4">
       <LogoMark className="size-11" />
       <span className="leading-none">
-        <span className="display-wide block text-[15px] text-white">PORKSHOP</span>
+        <span className="display-wide block text-[15px] text-white">PIRASO</span>
         <span className="mt-1 block text-[11px] font-medium tracking-wide text-sidebar-foreground/55">
           {role === "OWNER" ? "Owner console" : "Worker station"}
         </span>

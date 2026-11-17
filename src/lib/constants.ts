@@ -1,9 +1,17 @@
 export type Role = "OWNER" | "WORKER" | "CUSTOMER";
-export type OrderStatus = "PENDING" | "ASSIGNED" | "PROCESSING" | "READY" | "COMPLETED" | "CANCELLED";
+export type OrderStatus =
+  | "AWAITING_PAYMENT"
+  | "PENDING"
+  | "ASSIGNED"
+  | "PROCESSING"
+  | "READY"
+  | "COMPLETED"
+  | "CANCELLED";
 export type DutyStatus = "ON_DUTY" | "ON_BREAK" | "OFF_DUTY";
 export type ProductCategory = "PRIME_CUTS" | "RIBS_AND_BONES" | "GROUND" | "SPECIALTY" | "FAT";
 export type StockTxnType = "STOCK_IN" | "WITHDRAWAL" | "RETURN" | "SPOILAGE" | "CORRECTION";
 export type PaymentMethod = "CASH" | "GCASH" | "CARD";
+export type PaymentStatus = "UNPAID" | "SUBMITTED" | "PAID" | "REJECTED";
 
 export function homeFor(role: Role | string) {
   if (role === "OWNER") return "/owner";
@@ -18,6 +26,7 @@ export const ROLE_LABEL: Record<Role, string> = {
 };
 
 export const ORDER_STATUS_ORDER: OrderStatus[] = [
+  "AWAITING_PAYMENT",
   "PENDING",
   "ASSIGNED",
   "PROCESSING",
@@ -29,6 +38,12 @@ export const ORDER_STATUS: Record<
   OrderStatus,
   { label: string; customerLabel: string; description: string; tone: Tone }
 > = {
+  AWAITING_PAYMENT: {
+    label: "Awaiting payment",
+    customerLabel: "Awaiting payment",
+    description: "Waiting for the customer's GCash payment",
+    tone: "amber",
+  },
   PENDING: {
     label: "In queue",
     customerLabel: "Order received",
@@ -67,7 +82,7 @@ export const ORDER_STATUS: Record<
   },
 };
 
-export const ACTIVE_STATUSES: OrderStatus[] = ["PENDING", "ASSIGNED", "PROCESSING", "READY"];
+export const ACTIVE_STATUSES: OrderStatus[] = ["AWAITING_PAYMENT", "PENDING", "ASSIGNED", "PROCESSING", "READY"];
 /** Statuses that count toward a worker's workload when balancing assignments. */
 export const WORKLOAD_STATUSES: OrderStatus[] = ["ASSIGNED", "PROCESSING"];
 

@@ -1,14 +1,16 @@
-# Porkshop
+# Piraso
+
+*Fresh cuts, fair prices.* (Formerly “Porkshop”; the repository, folder and database keep the old name.)
 
 **A distributed inventory and order management system with parallel processing and automatic worker assignment.**
 
-Customers order fresh pork cuts online and choose a pickup slot. Orders are distributed automatically to the least-loaded on-duty worker. Workers weigh each cut, and the final price uses the actual weight. Inventory stays in sync on every connected device in real time.
+Customers order fresh pork cuts online, choose a pickup slot, and pay by GCash or in cash at pickup. Orders are distributed automatically to the least-loaded on-duty worker. Workers weigh each cut, and the final price uses the actual weight. Inventory stays in sync on every connected device in real time.
 
 ---
 
 ## Quick start
 
-> **Setting Porkshop up on a new computer?** Follow the step-by-step guide in **[SETUP.md](SETUP.md)**. It covers installing the tools, first run, everyday use, updates, backups and troubleshooting on Windows and macOS.
+> **Setting Piraso up on a new computer?** Follow the step-by-step guide in **[SETUP.md](SETUP.md)**. It covers installing the tools, first run, everyday use, updates, backups and troubleshooting on Windows and macOS.
 
 Prerequisites: **Node.js 24 LTS** (22.12+ also works), **Git** and **Docker Desktop**.
 
@@ -60,7 +62,9 @@ In development, the sign-in page has one-tap buttons that fill in these accounts
 - Product pages with a quantity stepper that follows each product's minimum and step (e.g. 0.25 kg).
 - Cart that is re-priced and stock-checked against the server.
 - Checkout with **pickup time slots** that show remaining capacity.
-- Order tracking: a 5-step progress tracker and an activity timeline, updated live.
+- **Payment choice:** pay now by **GCash** (scan the shop's QR code or send to its number, then submit the reference number and a screenshot of the receipt) or pay **cash at pickup**.
+- Order tracking: a 6-step tracker (*Order received → Payment → Assigned to staff → Prepared → Ready for pickup → Picked up*) and an activity timeline, updated live.
+- On phones, the cart stays pinned to the bottom of the screen, and the cart page keeps the total and checkout button in reach.
 - Cancellation: instant until preparation starts, then a *request* that the owner approves.
 - Notifications (in-app and live toasts) and profile/password settings.
 
@@ -108,12 +112,26 @@ The row lock taken by `UPDATE` forces racing transactions to re-check the condit
 `src/server/assignment.ts` assigns queued orders, earliest pickup first. Each goes to the on-duty worker with the **fewest active orders** (assigned + preparing), as long as they are below their capacity. Ties go to whoever has waited longest since their last assignment. The rule itself is a pure function (`src/lib/assignment.ts`) covered by unit tests.
 
 The dispatcher runs:
-- after every event that frees capacity or adds work (order placed, order packed, cancellation, worker clocking in, settings change);
-- every 30 seconds as a safety sweep.
+- after every event that frees capacity or adds work (order placed, GCash payment submitted, order packed, cancellation, worker clocking in, settings change);
+- every 30 seconds as a safety sweep (`src/server/sweeper.ts`, started for each server instance by `src/instrumentation.ts`).
 
 It is safe to run on any number of server instances at once: a transaction-scoped PostgreSQL **advisory lock** makes it a single critical section across the whole cluster, and `FOR UPDATE SKIP LOCKED` skips orders that another transaction is busy with.
 
 Pickup-slot capacity uses a per-slot advisory lock, so a burst of bookings can't overfill a slot.
+
+### Payments and time limits
+Customers choose **GCash** (pay before pickup) or **cash at pickup** at checkout. The owner turns GCash on and sets the account name, number and QR code in *Settings → GCash payments*, and sets both time limits in *Settings → Payment and pickup time limits*.
+
+| | GCash | Cash at pickup |
+|---|---|---|
+| When the order is placed | Status *Awaiting payment*; stock is reserved | Joins the assignment queue right away |
+| Customer is told | “Please complete your payment within 10 minutes” | “Please pick up within 2 hours of your pickup time” |
+| Next step | Submits the reference number + receipt screenshot; the order joins the queue | Butcher prepares it |
+| Staff | Check the payment in the shop's GCash app, then *Received* or *Reject* (with a reason; the customer gets a fresh window to resubmit) | Collect the weighed amount at handover |
+| If the time limit passes | Order cancelled automatically, reserved stock released | A packed, unpaid order is cancelled and its stock returned |
+| At pickup | Only the difference between the weighed total and the GCash payment is collected (or given back) | Full weighed amount collected |
+
+Both limits (10 minutes and 2 hours by default) are owner settings. Deadlines are enforced by the sweeper every 30 seconds, under row locks, so several server instances never double-cancel. Receipts are stored in the database (`PaymentProof`) and served only to staff and the order's customer (`/api/payment-proofs/[id]`).
 
 ### Real-time synchronisation
 Every write calls `pg_notify` *inside its transaction*, so PostgreSQL delivers the message only after commit. Each Next.js instance keeps a single `LISTEN` connection and forwards events over **Server-Sent Events** (`/api/events`), filtered by role and user. In the browser, `RealtimeListener` re-renders the current page's Server Components in place and shows a toast for personal notifications. No extra infrastructure (Redis, websockets) is needed, and it works across multiple server instances.
@@ -142,21 +160,21 @@ Every write calls `pg_notify` *inside its transaction*, so PostgreSQL delivers t
 | Tests | Vitest (unit), tsx integration stress test |
 
 ### Design system
-The look comes from the Porkshop logo and the butcher counter:
+The look comes from the Piraso logo and the butcher counter:
 
 | Token | Value | Used for |
 |---|---|---|
-| Night | `#10162A` | The logo's navy: console sidebar, hero, price board, footer |
-| Raspberry | `#C02A5E` | Primary actions (white text contrast 5.6:1) |
-| Neon | `#FF6A9B` | Highlights on Night only (6.7:1) |
+| Char | `#1C0F0D` | The logo's dark outline: console sidebar, hero, price board, footer, toasts |
+| Red | `#C70C0C` | The logo's red, a touch deeper: primary actions (white text contrast 6.0:1) |
+| Ember | `#F47A66` | The logo's salmon highlight, on Char only (6.9:1) |
 | Sky | `#4F7BE8` | Secondary accent and second chart series |
-| Tile | `#F5F6F8` | Page background |
+| Tile | `#F8F4F1` | Warm white page background |
 | Ticket | `#FBF3DA` | Scale-ticket paper for prices and totals |
 
 - **Typography:** Archivo (wide, sign-style) for headings and product labels, Instrument Sans for interface text, IBM Plex Mono for prices, weights and order codes.
 - **Signature, the scale ticket:** prices, cart and order totals, and confirmation summaries look like a meat scale's printed label, with perforated edges, mono figures and dotted leaders. The worker's weighing step looks like a scale's digital display.
 - **Status colors** are consistent everywhere (queue amber, assigned sky, preparing violet, ready emerald, cancelled red) and always paired with a text label.
-- **Scrollbars:** slim navy pills that match the sidebar.
+- **Scrollbars:** slim Char pills that match the sidebar.
 - **Reduced motion:** all animation is disabled when the operating system asks for it.
 - All money is in ₱ and all times are Asia/Manila.
 
@@ -178,7 +196,7 @@ The bundled demo photos and the logo are prepared by a script:
 node scripts/process-images.mjs
 ```
 
-- **Logo:** the script removes the logo's navy background (`public/brand/porkshop-logo.png`, plus the app icons) while keeping the badge's interior and its neon glow.
+- **Logo:** the script removes the logo's black background (`public/brand/piraso-logo.png`, plus the app icons) while keeping the badge and its outline. `node scripts/process-images.mjs --logo-only` redoes just the logo.
 - **Product photos:** it upscales each photo to at least 1200 px (`public/products/hd/`).
 - **Display style:** the app detects whether each photo is a white-background cut-out (blended onto a tinted tile) or a photo with its own background (shown full-bleed).
 

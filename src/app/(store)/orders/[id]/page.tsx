@@ -1,16 +1,17 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { CalendarClock, PartyPopper, UserRound } from "lucide-react";
+import { Banknote, CalendarClock, PartyPopper, UserRound } from "lucide-react";
 import { OrderItemsTable, OrderProgress, OrderTimeline } from "@/components/orders/order-parts";
 import { Container, PageHeader, PageSkeleton, Section } from "@/components/page";
 import { OrderStatusBadge, PaymentBadge } from "@/components/status";
 import { ORDER_STATUS } from "@/lib/constants";
-import { formatDateTime, formatShortDate, orderCode } from "@/lib/format";
+import { formatDateTime, formatPeso, formatShortDate, formatTime, orderCode } from "@/lib/format";
 import { formatSlotRange } from "@/lib/slots";
 import { requireRole } from "@/server/dal";
 import { getCustomerOrder } from "@/server/queries/orders";
 import { getSettings } from "@/server/settings";
 import { CancelOrderButton } from "./cancel-order";
+import { GcashPayment } from "./gcash-payment";
 
 export default function OrderPage({ params, searchParams }: PageProps<"/orders/[id]">) {
   return (
@@ -34,7 +35,9 @@ async function OrderDetailView({
   const [order, settings] = await Promise.all([getCustomerOrder(user.id, id), getSettings()]);
   if (!order) notFound();
 
-  const canCancel = ["PENDING", "ASSIGNED"].includes(order.status);
+  const canCancel = ["AWAITING_PAYMENT", "PENDING", "ASSIGNED"].includes(order.status);
+  const open = order.status !== "CANCELLED" && order.status !== "COMPLETED";
+  const gcash = order.paymentMethod === "GCASH";
   const canRequest = order.status === "PROCESSING" && order.cancelRequest === "NONE";
 
   return (
@@ -45,7 +48,9 @@ async function OrderDetailView({
           <div className="text-sm">
             <p className="font-medium">Thank you! Your order has been placed.</p>
             <p className="mt-0.5 text-emerald-900/80">
-              We’ll notify you as soon as a butcher picks it up and again when it’s ready.
+              {gcash && order.paymentStatus === "UNPAID"
+                ? `Complete your GCash payment below within ${settings.paymentWindowMinutes} minutes to secure it.`
+                : "We’ll notify you as soon as a butcher picks it up and again when it’s ready."}
             </p>
           </div>
         </div>
@@ -66,6 +71,32 @@ async function OrderDetailView({
 
       <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
         <div className="space-y-6">
+          {gcash && open && (
+            <GcashPayment
+              orderId={order.id}
+              amount={order.estimatedTotal}
+              dueAt={order.paymentDueAt}
+              paymentStatus={order.paymentStatus}
+              proof={order.proof}
+              gcash={{ name: settings.gcashName, number: settings.gcashNumber, qrUrl: settings.gcashQrUrl }}
+            />
+          )}
+          {!gcash && open && order.paymentStatus !== "PAID" && (
+            <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50/70 p-4 text-sm text-amber-950 sm:p-5">
+              <Banknote className="mt-0.5 size-5 shrink-0 text-amber-700" />
+              <div>
+                <p className="font-medium">
+                  Pay {formatPeso(order.total)}
+                  {order.finalTotal === null ? " (estimate)" : ""} in cash at pickup.
+                </p>
+                <p className="mt-0.5 text-amber-900/80">
+                  {order.pickupDeadline
+                    ? <>Please pick up your order by <span className="num font-medium">{formatShortDate(order.pickupDeadline)}, {formatTime(order.pickupDeadline)}</span>. Orders not collected by then are released.</>
+                    : `Please pick up your order within ${settings.pickupHoldHours} hour${settings.pickupHoldHours > 1 ? "s" : ""} of your pickup time.`}
+                </p>
+              </div>
+            </div>
+          )}
           <Section>
             <div className="p-5 sm:p-6">
               <OrderProgress order={order} />

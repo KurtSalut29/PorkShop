@@ -7,6 +7,8 @@
  *      (never-assigned workers first) — a fair round-robin among equally loaded workers.
  *   4. Final tie-break on id keeps the choice deterministic.
  */
+
+//distributed part for load balancing
 export type WorkerLoad = {
   id: string;
   activeCount: number;

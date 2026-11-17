@@ -132,6 +132,7 @@ export function CartView({ viewer }: { viewer: CartViewer }) {
   const blocking = Object.values(issues).some((i) => i.kind !== "price");
 
   return (
+    <>
     <div className="mt-8 grid items-start gap-6 lg:grid-cols-[1fr_380px]">
       <ul className="divide-y overflow-hidden rounded-2xl border bg-card">
         {items.map((item) => {
@@ -195,6 +196,8 @@ export function CartView({ viewer }: { viewer: CartViewer }) {
         </Link>
       </aside>
     </div>
+    <MobileCheckoutBar viewer={viewer} blocking={blocking} checked={checked} subtotal={subtotal} count={items.length} />
+    </>
   );
 }
 
@@ -242,5 +245,63 @@ function CheckoutButton({ viewer, blocking, checked }: { viewer: CartViewer; blo
         Choose a pickup time <ArrowRight className="size-4" />
       </Link>
     </Button>
+  );
+}
+
+/**
+ * Phones only: the cart total and the next step stay pinned to the bottom of the screen, so a
+ * long cart never hides the checkout button below the fold.
+ */
+function MobileCheckoutBar({
+  viewer,
+  blocking,
+  checked,
+  subtotal,
+  count,
+}: {
+  viewer: CartViewer;
+  blocking: boolean;
+  checked: boolean;
+  subtotal: number;
+  count: number;
+}) {
+  const action =
+    !checked || viewer === "loading"
+      ? { label: "Checking…", href: null }
+      : blocking
+        ? { label: "Fix marked items", href: null }
+        : viewer === "guest"
+          ? { label: "Sign in to check out", href: CHECKOUT_SIGN_IN }
+          : viewer === "staff"
+            ? { label: "Customers only", href: null }
+            : { label: "Checkout", href: "/checkout" };
+  return (
+    <>
+      {/* Spacer so the bar never covers the end of the page. */}
+      <div className="h-24 lg:hidden" aria-hidden />
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_-12px_rgb(36_19_15/0.25)] backdrop-blur lg:hidden">
+        <div className="mx-auto flex max-w-xl items-center gap-4">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-muted-foreground">
+              Estimate · {count} item{count > 1 ? "s" : ""}
+            </p>
+            <p className="num text-lg leading-tight font-semibold">{formatPeso(subtotal)}</p>
+          </div>
+          {action.href ? (
+            <Button asChild size="lg" className="h-11 px-5 text-[15px]">
+              <Link href={action.href}>
+                {viewer === "guest" ? <LogIn className="size-4" /> : null}
+                {action.label}
+                {viewer === "customer" ? <ArrowRight className="size-4" /> : null}
+              </Link>
+            </Button>
+          ) : (
+            <Button size="lg" className="h-11 px-5 text-[15px]" disabled>
+              {action.label}
+            </Button>
+          )}
+        </div>
+      </div>
+    </>
   );
 }

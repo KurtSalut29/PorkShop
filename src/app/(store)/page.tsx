@@ -12,13 +12,13 @@ import { formatPeso, formatQty, unitLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { listCatalog } from "@/server/queries/catalog";
 
-/** `cover` is the cut whose photo represents the category (it matches the sign label). */
+/** `cover` is the SKU of the cut whose photo represents the category (it matches the sign label). */
 const CATEGORIES: { key: ProductCategory; label: string; blurb: string; cover: string }[] = [
-  { key: "PRIME_CUTS", label: "Liempo", blurb: "Belly, leg, shoulder & loin", cover: "pork-belly" },
-  { key: "RIBS_AND_BONES", label: "Tadyang", blurb: "Spare ribs & soup bones", cover: "pork-ribs" },
-  { key: "GROUND", label: "Giniling", blurb: "Ground fresh every morning", cover: "pork-giniling" },
-  { key: "SPECIALTY", label: "Pata", blurb: "Hock, feet & whole head", cover: "pork-hock-feet" },
-  { key: "FAT", label: "Taba", blurb: "Back fat for lard & chicharon", cover: "pork-fat" },
+  { key: "PRIME_CUTS", label: "Liempo", blurb: "Belly, leg, shoulder & loin", cover: "PK-BLY" },
+  { key: "RIBS_AND_BONES", label: "Tadyang", blurb: "Spare ribs & soup bones", cover: "PK-RIB" },
+  { key: "GROUND", label: "Giniling", blurb: "Ground fresh every morning", cover: "PK-GRD" },
+  { key: "SPECIALTY", label: "Pata", blurb: "Hock, feet & whole head", cover: "PK-HCK" },
+  { key: "FAT", label: "Taba", blurb: "Back fat for lard & chicharon", cover: "PK-FAT" },
 ];
 
 const STEPS = [
@@ -40,7 +40,7 @@ export default function HomePage() {
             <h1 className="display-wide mt-5 text-[clamp(2.3rem,4.6vw,3.7rem)] leading-[0.95]">
               CUT TO ORDER.
               <br />
-              <span className="text-[oklch(0.74_0.17_355)]">WEIGHED FOR YOU.</span>
+              <span className="text-neon">WEIGHED FOR YOU.</span>
             </h1>
             <p className="mt-6 max-w-lg text-lg leading-relaxed text-white/70">
               Reserve fresh pork online, pick it up at your chosen time, and pay for exactly what the scale says.
@@ -125,7 +125,7 @@ export default function HomePage() {
 async function PriceBoard() {
   const products = await listCatalog();
   return (
-    <div className="enter rounded-2xl border border-white/10 bg-[oklch(0.15_0.035_268)] p-2 shadow-[0_30px_60px_-20px_oklch(0_0_0/0.6)] [animation-delay:80ms]">
+    <div className="enter rounded-2xl border border-white/10 bg-night-deep p-2 shadow-[0_30px_60px_-20px_oklch(0_0_0/0.6)] [animation-delay:80ms]">
       <div className="flex items-center justify-between px-4 pt-3 pb-3.5">
         <p className="font-mono text-[11px] font-semibold tracking-[0.2em] text-white/80 uppercase">Today at the counter</p>
         <span className="flex items-center gap-1.5 font-mono text-[11px] text-emerald-300">
@@ -186,7 +186,7 @@ async function CategoryTilesWithPhotos() {
   const photos = Object.fromEntries(
     CATEGORIES.map((c) => {
       const p =
-        products.find((x) => x.slug === c.cover && x.imageUrl) ?? products.find((x) => x.category === c.key && x.imageUrl);
+        products.find((x) => x.sku === c.cover && x.imageUrl) ?? products.find((x) => x.category === c.key && x.imageUrl);
       return [c.key, p ? { imageUrl: p.imageUrl, imageStyle: p.imageStyle } : undefined];
     }),
   ) as Partial<Record<ProductCategory, { imageUrl: string | null; imageStyle: "cutout" | "photo" }>>;
@@ -225,9 +225,10 @@ function CategoryTiles({
 }
 
 async function Featured() {
-  const featuredSlugs = ["pork-belly", "pork-ribs", "pork-giniling", "pork-hock-feet"];
-  const products = (await listCatalog()).filter((p) => featuredSlugs.includes(p.slug));
-  products.sort((a, b) => featuredSlugs.indexOf(a.slug) - featuredSlugs.indexOf(b.slug));
+  // By SKU, so renaming a product (which changes its slug) never drops it from this row.
+  const featured = ["PK-BLY", "PK-RIB", "PK-GRD", "PK-HCK"];
+  const products = (await listCatalog()).filter((p) => featured.includes(p.sku));
+  products.sort((a, b) => featured.indexOf(a.sku) - featured.indexOf(b.sku));
   return (
     <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {products.map((p) => (

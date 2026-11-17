@@ -45,12 +45,29 @@ export function PhotoUpload({
   value,
   onChange,
   error,
+  name = "imageUrl",
+  title = "Product photo",
+  description = "Shown on the shop, product page and cart.",
+  tip = "Tip: a photo on a plain white background blends into the shop’s tiles. Without a photo, the category illustration is shown.",
+  fit = "cover",
+  savedHint = "Save the product to show it in the shop.",
+  removedHint = "Save the product to apply. The category illustration is shown instead.",
 }: {
   /** Id of the file input, so the field's label opens the file picker. */
   id: string;
   value: string;
   onChange: (next: { url: string; imageStyle?: "cutout" | "photo" }) => void;
   error?: string;
+  /** Name of the hidden input the form submits. */
+  name?: string;
+  title?: string;
+  description?: string;
+  tip?: string;
+  /** "contain" keeps the whole image visible (e.g. a QR code). */
+  fit?: "cover" | "contain";
+  /** Toast descriptions after an upload and after removing the image. */
+  savedHint?: string;
+  removedHint?: string;
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<State>({ kind: "idle" });
@@ -83,7 +100,7 @@ export function PhotoUpload({
       onChange({ url: saved.url, imageStyle: saved.imageStyle });
       setInfo(`${saved.width} × ${saved.height} px`);
       setState({ kind: "idle" });
-      notify.success("Photo uploaded", "Save the product to show it in the shop.");
+      notify.success(`${title} uploaded`, savedHint);
     } catch (err) {
       const message = err instanceof Error ? err.message : "We couldn’t save that photo. Please try again.";
       setState({ kind: "error", message });
@@ -99,7 +116,7 @@ export function PhotoUpload({
 
   return (
     <div>
-      <input type="hidden" name="imageUrl" value={value} />
+      <input type="hidden" name={name} value={value} />
       <input
         ref={input}
         id={id}
@@ -129,7 +146,7 @@ export function PhotoUpload({
           <div className="flex flex-col gap-4 p-3 sm:flex-row sm:items-center">
             <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden rounded-lg bg-muted sm:w-44">
               {/* eslint-disable-next-line @next/next/no-img-element -- local blob preview or freshly uploaded photo */}
-              <img src={shown} alt="Product photo" className={cn("size-full object-cover", busy && "opacity-60")} />
+              <img src={shown} alt={title} className={cn("size-full", fit === "contain" ? "bg-white object-contain p-1.5" : "object-cover", busy && "opacity-60")} />
               {busy && (
                 <div className="absolute inset-0 grid place-items-center">
                   <span className="flex items-center gap-1.5 rounded-full bg-night/85 px-2.5 py-1 font-mono text-xs text-white">
@@ -139,9 +156,9 @@ export function PhotoUpload({
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{busy ? `Uploading ${state.name}…` : "Product photo"}</p>
+              <p className="truncate text-sm font-medium">{busy ? `Uploading ${state.name}…` : title}</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {busy ? "You can keep filling in the form." : (info ?? "Shown on the shop, product page and cart.")}
+                {busy ? "You can keep filling in the form." : (info ?? description)}
               </p>
               {busy ? (
                 <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
@@ -150,7 +167,7 @@ export function PhotoUpload({
               ) : (
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button type="button" size="sm" variant="outline" onClick={choose}>
-                    <RefreshCw className="size-3.5" /> Replace photo
+                    <RefreshCw className="size-3.5" /> Replace
                   </Button>
                   <Button
                     type="button"
@@ -160,7 +177,7 @@ export function PhotoUpload({
                     onClick={() => {
                       onChange({ url: "" });
                       setInfo(null);
-                      notify.info("Photo removed", "Save the product to apply. The category illustration is shown instead.");
+                      notify.info(`${title} removed`, removedHint);
                     }}
                   >
                     <Trash2 className="size-3.5" /> Remove
@@ -195,7 +212,7 @@ export function PhotoUpload({
         </p>
       ) : (
         <p className="mt-1.5 text-xs text-muted-foreground">
-          Tip: a photo on a plain white background blends into the shop’s tiles. Without a photo, the category illustration is shown.
+          {tip}
         </p>
       )}
     </div>

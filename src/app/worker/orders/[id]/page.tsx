@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { StaffOrderDetail } from "@/components/staff/order-detail";
 import { OrderWorkflow } from "@/components/staff/order-workflow";
+import { PaymentReview } from "@/components/staff/payment-review";
 import { requireRole } from "@/server/dal";
 import { getWorkerOrder } from "@/server/queries/orders";
 import { getSettings } from "@/server/settings";
@@ -15,7 +16,12 @@ export default async function WorkerOrderPage({ params }: PageProps<"/worker/ord
       order={order}
       slotMinutes={settings.slotMinutes}
       back={{ href: "/worker/orders", label: "My orders" }}
-      sidebarTop={<OrderWorkflow order={order} />}
+      sidebarTop={
+        <>
+          <PaymentReview order={order} />
+          <OrderWorkflow order={order} />
+        </>
+      }
     />
   );
 }

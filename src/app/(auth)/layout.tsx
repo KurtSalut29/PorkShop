@@ -14,7 +14,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
       <aside className="relative hidden overflow-hidden bg-night text-white lg:flex lg:flex-col lg:justify-between lg:p-12">
         <div className="night-glow pointer-events-none absolute inset-0" aria-hidden />
         <div className="relative">
-          <Link href="/" aria-label="Porkshop home">
+          <Link href="/" aria-label="Piraso home">
             <LogoEmblem className="-ml-2 w-36" />
           </Link>
         </div>
@@ -22,7 +22,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
           <p className="display-wide text-[2.6rem] leading-[0.95]">
             FRESH PORK,
             <br />
-            <span className="text-[oklch(0.74_0.17_355)]">READY WHEN YOU ARE.</span>
+            <span className="text-[#f47a66]">READY WHEN YOU ARE.</span>
           </p>
           <ul className="mt-10 space-y-6">
             {POINTS.map(({ icon: Icon, title, body }) => (

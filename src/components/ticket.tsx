@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 /**
- * The scale ticket: Porkshop's signature element. Modelled on the label a meat scale prints:
+ * The scale ticket: Piraso's signature element. Modelled on the label a meat scale prints:
  * perforated edges, receipt mono figures and dotted leaders. Used wherever money or weight is
  * the point: prices, cart and order totals, confirmations.
  */

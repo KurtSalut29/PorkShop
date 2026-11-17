@@ -107,11 +107,36 @@ export const settingsSchema = z
     leadTimeMinutes: z.coerce.number().int().min(0).max(24 * 60),
     advanceDays: z.coerce.number().int().min(1).max(14),
     maxActiveOrdersPerWorker: z.coerce.number().int().min(1).max(30),
+    // Payments. Checkbox inputs only send a value when ticked.
+    gcashEnabled: z.preprocess((v) => v === "on" || v === "true" || v === true, z.boolean()),
+    gcashName: z.string().trim().max(60).default(""),
+    gcashNumber: z.string().trim().default(""),
+    gcashQrUrl: z.string().trim().default(""),
+    paymentWindowMinutes: z.coerce
+      .number({ error: "Enter a number of minutes." })
+      .int("Use whole minutes.")
+      .min(1, "Allow at least 1 minute.")
+      .max(240, "Keep it to 240 minutes (4 hours) or less."),
+    pickupHoldHours: z.coerce
+      .number({ error: "Enter a number of hours." })
+      .int("Use whole hours.")
+      .min(1, "Hold orders for at least 1 hour.")
+      .max(72, "Keep it to 72 hours or less."),
   })
   .refine((v) => v.openTime < v.closeTime, {
     path: ["closeTime"],
     message: "Closing time must be after opening time.",
-  });
+  })
+  .superRefine((v, ctx) => {
+    if (v.gcashNumber && !phMobileSchema.safeParse(v.gcashNumber).success) {
+      ctx.addIssue({ code: "custom", path: ["gcashNumber"], message: "Enter an 11-digit mobile number like 0917 123 4567." });
+    }
+    if (!v.gcashEnabled) return;
+    if (v.gcashName.length < 2) ctx.addIssue({ code: "custom", path: ["gcashName"], message: "Enter the name on the GCash account." });
+    if (!v.gcashNumber) ctx.addIssue({ code: "custom", path: ["gcashNumber"], message: "Enter the GCash number customers will pay to." });
+    if (!v.gcashQrUrl) ctx.addIssue({ code: "custom", path: ["gcashQrUrl"], message: "Upload the GCash QR code customers will scan." });
+  })
+  .transform((v) => ({ ...v, gcashNumber: v.gcashNumber ? phMobileSchema.parse(v.gcashNumber) : "" }));
 
 export const placeOrderSchema = z.object({
   items: z
@@ -125,7 +150,24 @@ export const placeOrderSchema = z.object({
     .max(30),
   pickupAt: z.iso.datetime({ error: "Choose a pickup time." }),
   notes: z.string().trim().max(300).optional(),
+  paymentMethod: z.enum(["CASH", "GCASH"], { error: "Choose how you'll pay." }),
 });
+
+/** A GCash reference number: digits only once spaces are removed (GCash prints 13). */
+export const gcashReferenceSchema = z
+  .string()
+  .transform((s) => s.replace(/[\s-]/g, ""))
+  .pipe(
+    z
+      .string()
+      .regex(/^\d{10,20}$/, "Enter the reference number from your GCash receipt (numbers only, usually 13 digits)."),
+  );
+
+/** Philippine mobile number, as shown in GCash: 09XX XXX XXXX (+63 also accepted). Normalised to 09XXXXXXXXX. */
+export const phMobileSchema = z
+  .string()
+  .transform((s) => s.replace(/[\s-]/g, "").replace(/^\+?63/, "0"))
+  .pipe(z.string().regex(/^09\d{9}$/, "Enter an 11-digit mobile number like 0917 123 4567."));
 
 export const profileSchema = z.object({
   name: z.string().trim().min(2, "Enter your full name.").max(80),

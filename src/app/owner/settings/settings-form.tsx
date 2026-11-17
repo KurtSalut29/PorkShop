@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { saveSettingsAction } from "@/app/actions/admin";
 import { useConfirmedFormAction } from "@/components/feedback/confirm";
 import { errorFor, Field, SubmitButton } from "@/components/form";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { PhotoUpload } from "../products/photo-upload";
 
 type Settings = {
   shopName: string;
@@ -14,9 +17,16 @@ type Settings = {
   leadTimeMinutes: number;
   advanceDays: number;
   maxActiveOrdersPerWorker: number;
+  gcashEnabled: boolean;
+  gcashName: string;
+  gcashNumber: string;
+  gcashQrUrl: string;
+  paymentWindowMinutes: number;
+  pickupHoldHours: number;
 };
 
 export function SettingsForm({ settings }: { settings: Settings }) {
+  const [qr, setQr] = useState(settings.gcashQrUrl);
   const {
     onSubmit,
     pending,
@@ -33,19 +43,30 @@ export function SettingsForm({ settings }: { settings: Settings }) {
         leadTimeMinutes: "Lead time",
         advanceDays: "Booking window",
         maxActiveOrdersPerWorker: "Orders per worker",
+        gcashEnabled: "GCash payments",
+        gcashName: "GCash account name",
+        gcashNumber: "GCash number",
+        gcashQrUrl: "GCash QR code",
+        paymentWindowMinutes: "Time to pay (GCash)",
+        pickupHoldHours: "Pickup hold (cash)",
       };
+      // How a value reads in the confirmation list.
+      const show = (k: keyof Settings, v: string | number | boolean) =>
+        k === "gcashEnabled" ? (v ? "On" : "Off") : k === "gcashQrUrl" ? (v ? "Uploaded" : "None") : String(v) || "—";
+      const after = (k: keyof Settings): string | boolean =>
+        k === "gcashEnabled" ? fd.get(k) === "on" : String(fd.get(k) ?? "");
       const changes = (Object.keys(labels) as (keyof Settings)[])
-        .filter((k) => String(fd.get(k) ?? "") !== String(settings[k]))
+        .filter((k) => (k === "gcashEnabled" ? after(k) !== settings[k] : String(after(k)) !== String(settings[k])))
         .map((k) => ({
           label: labels[k],
-          value: `${settings[k]} → ${String(fd.get(k) ?? "")}`,
+          value: k === "gcashQrUrl" ? (after(k) ? "New QR code" : "Removed") : `${show(k, settings[k])} → ${show(k, after(k))}`,
         }));
       return {
         title: changes.length
           ? `Save ${changes.length} setting change${changes.length > 1 ? "s" : ""}?`
           : "Save without changes?",
         description: changes.length
-          ? "Pickup slots and automatic assignment use the new values immediately. Existing orders keep their pickup times."
+          ? "New values apply right away. Orders already placed keep their pickup times and payment deadlines."
           : "Nothing has changed.",
         details: changes,
         confirmLabel: "Save settings",
@@ -181,6 +202,76 @@ export function SettingsForm({ settings }: { settings: Settings }) {
               defaultValue={settings.maxActiveOrdersPerWorker}
               className="num"
             />
+          </Field>
+        </div>
+      </SettingsRow>
+
+      <SettingsRow
+        title="GCash payments"
+        description="Let customers pay online before pickup, so the cuts you set aside are paid for. Customers scan this QR code or send to this number, then upload their receipt."
+      >
+        <div className="grid gap-5 p-5 sm:grid-cols-2">
+          <label htmlFor="gcashEnabled" className="flex cursor-pointer items-start gap-3 rounded-xl border bg-muted/40 p-4 sm:col-span-2">
+            <Checkbox id="gcashEnabled" name="gcashEnabled" defaultChecked={settings.gcashEnabled} className="mt-0.5" />
+            <span className="text-sm">
+              <span className="font-medium">Accept GCash payments</span>
+              <span className="mt-0.5 block text-muted-foreground">
+                Customers can choose GCash at checkout. Cash at pickup stays available either way.
+              </span>
+            </span>
+          </label>
+          <Field label="GCash account name" htmlFor="gcashName" error={errorFor(fe, "gcashName")} hint="As shown in the GCash app">
+            <Input id="gcashName" name="gcashName" defaultValue={settings.gcashName} placeholder="e.g. Juan D." aria-invalid={!!errorFor(fe, "gcashName")} />
+          </Field>
+          <Field label="GCash number" htmlFor="gcashNumber" error={errorFor(fe, "gcashNumber")}>
+            <Input
+              id="gcashNumber"
+              name="gcashNumber"
+              inputMode="tel"
+              defaultValue={settings.gcashNumber}
+              placeholder="0917 123 4567"
+              className="num"
+              aria-invalid={!!errorFor(fe, "gcashNumber")}
+            />
+          </Field>
+          <Field label="GCash QR code" htmlFor="gcashQr" className="sm:col-span-2">
+            <PhotoUpload
+              id="gcashQr"
+              name="gcashQrUrl"
+              value={qr}
+              onChange={({ url }) => setQr(url)}
+              error={errorFor(fe, "gcashQrUrl")}
+              title="GCash QR code"
+              description="Customers scan this to pay."
+              tip="In the GCash app, open “Receive” → “QR” → Download, then upload the saved image here."
+              fit="contain"
+              savedHint="Save settings to show it to customers."
+              removedHint="Save settings to apply. Customers can’t pay by GCash without a QR code."
+            />
+          </Field>
+        </div>
+      </SettingsRow>
+
+      <SettingsRow
+        title="Payment and pickup time limits"
+        description="Orders that aren’t paid for or collected in time are cancelled automatically and their cuts go back on sale. Customers are told these limits when they order."
+      >
+        <div className="grid gap-5 p-5 sm:grid-cols-2">
+          <Field
+            label="Time to pay by GCash (minutes)"
+            htmlFor="paymentWindowMinutes"
+            error={errorFor(fe, "paymentWindowMinutes")}
+            hint="Customers who choose GCash must submit their payment within this time."
+          >
+            <Input id="paymentWindowMinutes" name="paymentWindowMinutes" inputMode="numeric" defaultValue={settings.paymentWindowMinutes} className="num" />
+          </Field>
+          <Field
+            label="Pickup hold for cash orders (hours)"
+            htmlFor="pickupHoldHours"
+            error={errorFor(fe, "pickupHoldHours")}
+            hint="A packed order paid in cash is released if not picked up this long after its pickup time."
+          >
+            <Input id="pickupHoldHours" name="pickupHoldHours" inputMode="numeric" defaultValue={settings.pickupHoldHours} className="num" />
           </Field>
         </div>
       </SettingsRow>

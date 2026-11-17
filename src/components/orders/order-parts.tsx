@@ -1,11 +1,16 @@
 import { Check, CircleX } from "lucide-react";
-import { ORDER_STATUS, ORDER_STATUS_ORDER } from "@/lib/constants";
 import { formatDateTime, formatPeso, formatQty, formatTime, formatUnitPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Ticket } from "@/components/ticket";
 import type { OrderDetail, OrderView } from "@/server/queries/orders";
 
-/** Visual tracker: Received → Assigned → Being prepared → Ready → Picked up. */
+type Step = { key: string; label: string; staffLabel: string; stamp: string | null; caption?: string; warn?: boolean };
+
+/**
+ * Visual tracker: Order received → Payment → Assigned to staff → Prepared → Ready for pickup → Picked up.
+ * Steps the order has passed are ticked; the next step is highlighted with a short caption of what's
+ * happening now (e.g. "Pay by 3:12 PM", "Cutting & weighing").
+ */
 export function OrderProgress({ order, audience = "customer" }: { order: OrderView; audience?: "customer" | "staff" }) {
   if (order.status === "CANCELLED") {
     return (
@@ -18,44 +23,77 @@ export function OrderProgress({ order, audience = "customer" }: { order: OrderVi
       </div>
     );
   }
-  const stamps: Record<string, string | null> = {
-    PENDING: order.createdAt,
-    ASSIGNED: order.assignedAt,
-    PROCESSING: order.processingAt,
-    READY: order.readyAt,
-    COMPLETED: order.completedAt,
+
+  const gcash = order.paymentMethod === "GCASH";
+  const paymentCaption = !gcash
+    ? "Cash at pickup"
+    : order.paymentStatus === "PAID"
+      ? "GCash paid"
+      : order.paymentStatus === "SUBMITTED"
+        ? "GCash · verifying"
+        : order.paymentStatus === "REJECTED"
+          ? `Resubmit${order.paymentDueAt ? ` by ${formatTime(order.paymentDueAt)}` : ""}`
+          : `Pay${order.paymentDueAt ? ` by ${formatTime(order.paymentDueAt)}` : ""}`;
+  const steps: Step[] = [
+    { key: "received", label: "Order received", staffLabel: "Received", stamp: order.createdAt },
+    {
+      key: "payment",
+      label: "Payment",
+      staffLabel: "Payment",
+      stamp: gcash ? (order.proof?.createdAt ?? null) : order.createdAt,
+      caption: paymentCaption,
+      warn: order.paymentStatus === "REJECTED",
+    },
+    { key: "assigned", label: "Assigned to staff", staffLabel: "Assigned", stamp: order.assignedAt },
+    { key: "prepared", label: "Prepared", staffLabel: "Prepared", stamp: order.processingAt },
+    { key: "ready", label: "Ready for pickup", staffLabel: "Ready", stamp: order.readyAt },
+    { key: "done", label: "Picked up", staffLabel: "Completed", stamp: order.completedAt },
+  ];
+  // The last step the order has reached.
+  const reached = { AWAITING_PAYMENT: 0, PENDING: 1, ASSIGNED: 2, PROCESSING: 2, READY: 4, COMPLETED: 5 }[order.status];
+  const nowCaption: Record<string, string> = {
+    AWAITING_PAYMENT: paymentCaption,
+    PENDING: audience === "customer" ? "Finding staff" : "In queue",
+    ASSIGNED: "Starting soon",
+    PROCESSING: "Cutting & weighing",
+    READY: audience === "customer" ? "Waiting for you" : "Awaiting customer",
   };
-  const currentIndex = ORDER_STATUS_ORDER.indexOf(order.status);
 
   return (
-    <ol className="grid grid-cols-5 gap-1" aria-label="Order progress">
-      {ORDER_STATUS_ORDER.map((status, i) => {
-        const done = i < currentIndex || order.status === "COMPLETED";
-        const current = i === currentIndex && order.status !== "COMPLETED";
-        const meta = ORDER_STATUS[status];
+    <ol className="grid grid-cols-6 gap-1" aria-label="Order progress">
+      {steps.map((step, i) => {
+        const done = i <= reached;
+        const current = i === reached + 1 && order.status !== "COMPLETED";
+        const caption = step.key === "payment" && (done || current) ? step.caption : current ? nowCaption[order.status] : undefined;
         return (
-          <li key={status} className="relative flex flex-col items-center text-center" aria-current={current ? "step" : undefined}>
+          <li key={step.key} className="relative flex flex-col items-center text-center" aria-current={current ? "step" : undefined}>
             {i > 0 && (
               <span
-                className={cn("absolute top-3.5 right-1/2 h-0.5 w-full -translate-y-1/2", i <= currentIndex ? "bg-primary" : "bg-border")}
+                className={cn("absolute top-3.5 right-1/2 h-0.5 w-full -translate-y-1/2", i <= reached + 1 ? "bg-primary" : "bg-border")}
                 aria-hidden
               />
             )}
             <span
               className={cn(
                 "relative z-10 grid size-7 place-items-center rounded-full border-2 bg-card text-xs font-semibold",
-                done && "border-primary bg-primary text-primary-foreground",
-                current && "border-primary text-primary ring-4 ring-primary/15",
-                !done && !current && "border-border text-muted-foreground",
+                done && !step.warn && "border-primary bg-primary text-primary-foreground",
+                current && !step.warn && "border-primary text-primary ring-4 ring-primary/15",
+                step.warn && "border-destructive text-destructive ring-4 ring-destructive/15",
+                !done && !current && !step.warn && "border-border text-muted-foreground",
               )}
             >
-              {done ? <Check className="size-3.5" strokeWidth={3} /> : i + 1}
+              {done && !step.warn ? <Check className="size-3.5" strokeWidth={3} /> : i + 1}
             </span>
             <span className={cn("mt-2 text-[11px] leading-tight font-medium sm:text-xs", !done && !current && "text-muted-foreground")}>
-              {audience === "customer" ? meta.customerLabel : meta.label}
+              {audience === "customer" ? step.label : step.staffLabel}
             </span>
-            {stamps[status] && (done || current) && (
-              <span className="num mt-0.5 hidden text-[11px] text-muted-foreground sm:block">{formatTime(stamps[status]!)}</span>
+            {caption ? (
+              <span className={cn("mt-0.5 text-[10px] leading-tight sm:text-[11px]", step.warn ? "font-medium text-destructive" : current ? "font-medium text-primary" : "text-muted-foreground")}>
+                {caption}
+              </span>
+            ) : (
+              step.stamp &&
+              done && <span className="num mt-0.5 hidden text-[11px] text-muted-foreground sm:block">{formatTime(step.stamp)}</span>
             )}
           </li>
         );
@@ -99,8 +137,24 @@ export function OrderItemsTable({ order }: { order: OrderView }) {
             { label: "Estimated", value: formatPeso(order.estimatedTotal), muted: order.finalTotal !== null, struck: order.finalTotal !== null },
             ...(order.finalTotal !== null ? [{ label: "Weighed total", value: formatPeso(order.finalTotal) }] : []),
           ]}
-          total={{ label: order.finalTotal !== null ? "Total" : "Pay at pickup", value: formatPeso(order.total) }}
-          footnote={order.finalTotal === null ? "Final amount is set when your cuts are weighed." : undefined}
+          total={{
+            label:
+              order.finalTotal !== null
+                ? "Total"
+                : order.paymentMethod === "GCASH"
+                  ? order.paymentStatus === "PAID"
+                    ? "Paid by GCash"
+                    : "Pay by GCash"
+                  : "Pay at pickup",
+            value: formatPeso(order.total),
+          }}
+          footnote={
+            order.finalTotal === null
+              ? order.paymentMethod === "GCASH"
+                ? "Final amount is set when your cuts are weighed. Any small difference is settled at pickup."
+                : "Final amount is set when your cuts are weighed."
+              : undefined
+          }
         />
       </div>
     </div>

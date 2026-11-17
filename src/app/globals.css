@@ -5,61 +5,61 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Porkshop design tokens, taken from the Porkshop logo and the butcher counter
- *   Night     #10162A  the logo's navy: console sidebar, price board, hero, footer
- *   Raspberry #C02A5E  the logo's ribbon pink, deepened for contrast: primary actions
- *   Neon      #FF6A9B  the logo's neon outline: highlights on Night only
- *   Sky       #4F7BE8  the logo's blue ring: secondary accent, second chart series
- *   Tile      #F5F6F8  cool white counter tile: page background
- *   Ticket    #FBF3DA  scale-ticket paper: prices, totals, receipts
+ * Piraso design tokens, taken from the Piraso logo and the butcher counter
+ *   Char      #1C0F0D  the logo's dark outline: console sidebar, price board, hero, footer, toasts
+ *   Red       #C70C0C  the logo's red, a touch deeper for contrast: primary actions (white 6.0:1)
+ *   Ember     #F47A66  the logo's salmon highlight: accents on Char only (6.9:1)
+ *   Sky       #4F7BE8  secondary accent and second chart series (kept distinct from the reds)
+ *   Tile      #F8F4F1  warm white counter tile: page background
+ *   Ticket    #FBF3DA  scale-ticket paper, the cream of the logo's lettering: prices, totals
  *   Scale     #3DDC97  scale display digits: live weights
- * Errors use an orange-red (not pink) so they never read as brand.
+ * Errors use a rust orange-red so they never read as the brand red.
  */
 :root {
   /* Height the floating store nav reserves at the top of the page (top gap + pill). */
   --store-nav: 7.75rem;
-  --background: oklch(0.971 0.004 265);
-  --foreground: oklch(0.2 0.025 265);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.025 265);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.025 265);
-  --primary: oklch(0.53 0.19 3);
-  --primary-foreground: oklch(0.99 0.004 80);
-  --secondary: oklch(0.948 0.006 265);
-  --secondary-foreground: oklch(0.27 0.03 265);
-  --muted: oklch(0.953 0.005 265);
-  --muted-foreground: oklch(0.49 0.02 265);
-  --accent: oklch(0.955 0.02 360);
-  --accent-foreground: oklch(0.45 0.17 3);
-  --destructive: oklch(0.585 0.215 32);
+  --background: #f8f4f1;
+  --foreground: #24130f;
+  --card: #ffffff;
+  --card-foreground: #24130f;
+  --popover: #ffffff;
+  --popover-foreground: #24130f;
+  --primary: #c70c0c;
+  --primary-foreground: #fffaf5;
+  --secondary: #f1ebe7;
+  --secondary-foreground: #3a2520;
+  --muted: #f3eeea;
+  --muted-foreground: #6b5a54;
+  --accent: #fbe9e6;
+  --accent-foreground: #a80a0a;
+  --destructive: #c2410c;
   --success: oklch(0.56 0.12 158);
   --warning: oklch(0.74 0.15 72);
-  --border: oklch(0.905 0.008 265);
-  --input: oklch(0.875 0.01 265);
-  --ring: oklch(0.6 0.17 3);
-  --chart-1: oklch(0.53 0.19 3);
+  --border: #e7ded9;
+  --input: #d9cdc7;
+  --ring: #d9363a;
+  --chart-1: #c70c0c;
   --chart-2: oklch(0.6 0.16 265);
   --chart-3: oklch(0.6 0.08 160);
   --chart-4: oklch(0.56 0.08 250);
   --chart-5: oklch(0.68 0.06 40);
   --radius: 0.625rem;
 
-  /* Steel console sidebar */
-  --sidebar: oklch(0.19 0.035 268);
-  --sidebar-foreground: oklch(0.83 0.02 268);
-  --sidebar-primary: oklch(0.74 0.17 355);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.26 0.04 268);
-  --sidebar-accent-foreground: oklch(0.98 0 0);
-  --sidebar-border: oklch(0.28 0.035 268);
-  --sidebar-ring: oklch(0.74 0.17 355);
+  /* Char console sidebar */
+  --sidebar: #1c0f0d;
+  --sidebar-foreground: #e7d9d2;
+  --sidebar-primary: #f47a66;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2b1814;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #36211c;
+  --sidebar-ring: #f47a66;
 
   /* Signature: scale ticket + scale display */
   --ticket: oklch(0.975 0.028 92);
   --ticket-ink: oklch(0.25 0.01 60);
   --ticket-rule: oklch(0.82 0.01 80);
-  --scale-bg: oklch(0.17 0.03 255);
+  --scale-bg: #160b09;
   --scale-digit: oklch(0.82 0.16 160);
 }
 
@@ -106,8 +106,9 @@
   --color-ticket-rule: var(--ticket-rule);
   --color-scale-bg: var(--scale-bg);
   --color-scale-digit: var(--scale-digit);
-  --color-night: oklch(0.19 0.035 268);
-  --color-neon: oklch(0.74 0.17 355);
+  --color-night: #1c0f0d;
+  --color-night-deep: #140a08;
+  --color-neon: #f47a66;
   --color-sky: oklch(0.6 0.16 265);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -151,7 +152,7 @@
     cursor: pointer;
   }
   ::selection {
-    background: oklch(0.53 0.19 3 / 0.18);
+    background: rgb(199 12 12 / 0.16);
   }
   :focus-visible {
     outline-offset: 2px;
@@ -159,21 +160,21 @@
 }
 
 /*
- * Scrollbars: slim navy pills that match the sidebar instead of the browser's grey default.
- * Light surfaces get a Night thumb on a clear track; Night surfaces (sidebar, price board)
- * get a lighter navy thumb. Thumbs turn Raspberry while dragged.
+ * Scrollbars: slim Char pills that match the sidebar instead of the browser's grey default.
+ * Light surfaces get a Char thumb on a clear track; Char surfaces (sidebar, price board)
+ * get a lighter warm thumb. Thumbs turn red while dragged.
  */
 :root {
-  --scroll-thumb: oklch(0.19 0.035 268 / 0.55);
-  --scroll-thumb-hover: oklch(0.19 0.035 268 / 0.85);
-  --scroll-thumb-active: oklch(0.53 0.19 3);
+  --scroll-thumb: rgb(28 15 13 / 0.5);
+  --scroll-thumb-hover: rgb(28 15 13 / 0.8);
+  --scroll-thumb-active: #c70c0c;
   --scroll-track: transparent;
 }
 
 .scroll-night {
-  --scroll-thumb: oklch(0.42 0.05 268);
-  --scroll-thumb-hover: oklch(0.52 0.06 268);
-  --scroll-thumb-active: oklch(0.74 0.17 355);
+  --scroll-thumb: #57403a;
+  --scroll-thumb-hover: #6f554e;
+  --scroll-thumb-active: #f47a66;
 }
 
 /* Firefox (and browsers without the WebKit pseudo-elements) */
@@ -209,9 +210,9 @@
   display: none;
   background: transparent;
 }
-/* The page itself scrolls against the tile background: give its track a faint navy rail. */
+/* The page itself scrolls against the tile background: give its track a faint warm rail. */
 html::-webkit-scrollbar-track {
-  background: oklch(0.19 0.035 268 / 0.05);
+  background: rgb(28 15 13 / 0.05);
 }
 
 @layer components {
@@ -295,13 +296,13 @@ html::-webkit-scrollbar-track {
 }
 
 /* Fine tile grid used behind hero areas. */
-/* Soft light on the Night navy panels (landing hero, sign-in): the logo's neon pink glows
- * from the upper left, a cool blue from the lower right, and the edges fall off darker. */
+/* Soft light on the Char panels (landing hero, sign-in): the logo's red glows from the upper
+ * left, a warm ember from the lower right, and the edges fall off darker. */
 @utility night-glow {
   background-image:
-    radial-gradient(60% 70% at 12% 18%, oklch(0.6 0.2 360 / 0.22), transparent 70%),
-    radial-gradient(55% 65% at 92% 85%, oklch(0.58 0.15 265 / 0.22), transparent 70%),
-    radial-gradient(120% 90% at 50% 0%, transparent 55%, oklch(0.12 0.03 268 / 0.6));
+    radial-gradient(60% 70% at 12% 18%, rgb(212 3 5 / 0.24), transparent 70%),
+    radial-gradient(55% 65% at 92% 85%, rgb(244 122 102 / 0.14), transparent 70%),
+    radial-gradient(120% 90% at 50% 0%, transparent 55%, rgb(12 6 5 / 0.6));
 }
 
 @utility enter {

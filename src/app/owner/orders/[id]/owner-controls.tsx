@@ -211,6 +211,8 @@ export function PaymentControl({ order }: { order: OrderView }) {
   const [pending, start] = useTransition();
   const [method, setMethod] = useState<PaymentMethod>("GCASH");
   if (order.status === "CANCELLED" || order.status === "COMPLETED") return null;
+  // A submitted GCash payment is confirmed or rejected in the GCash payment panel.
+  if (order.paymentStatus === "SUBMITTED") return null;
 
   async function setPaid(paid: boolean) {
     const ok = await confirm(
@@ -249,7 +251,7 @@ export function PaymentControl({ order }: { order: OrderView }) {
       {order.paymentStatus === "PAID" ? (
         <div className="mt-3 flex items-center justify-between gap-3">
           <p className="flex items-center gap-1.5 text-sm text-emerald-800">
-            <CircleCheck className="size-4" /> Paid in advance
+            <CircleCheck className="size-4" /> Paid in advance{order.paymentMethod === "GCASH" ? " by GCash" : ""}
           </p>
           <Button size="sm" variant="ghost" disabled={pending} onClick={() => setPaid(false)}>
             Mark unpaid

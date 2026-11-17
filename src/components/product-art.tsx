@@ -13,11 +13,11 @@ const ART: Record<
   ProductCategory,
   { icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; sign: string; tint: string; fg: string; sub: string }
 > = {
-  PRIME_CUTS: { icon: Beef, sign: "bg-[#c02a5e]", tint: "bg-[#fbeef2]", fg: "text-white", sub: "text-white/65" },
-  RIBS_AND_BONES: { icon: Bone, sign: "bg-[#1b2440]", tint: "bg-[#eef1f7]", fg: "text-white", sub: "text-white/55" },
-  GROUND: { icon: Soup, sign: "bg-[#d2544c]", tint: "bg-[#fcf0ee]", fg: "text-white", sub: "text-white/65" },
-  SPECIALTY: { icon: Ham, sign: "bg-[#5d2a56]", tint: "bg-[#f5eef5]", fg: "text-white", sub: "text-white/60" },
-  FAT: { icon: Drumstick, sign: "bg-[#efe1c2]", tint: "bg-[#fbf6ea]", fg: "text-[#3a2a12]", sub: "text-[#3a2a12]/55" },
+  PRIME_CUTS: { icon: Beef, sign: "bg-[#c70c0c]", tint: "bg-[#fcecea]", fg: "text-white", sub: "text-white/65" },
+  RIBS_AND_BONES: { icon: Bone, sign: "bg-[#2b1814]", tint: "bg-[#f3eeeb]", fg: "text-white", sub: "text-white/55" },
+  GROUND: { icon: Soup, sign: "bg-[#d9533f]", tint: "bg-[#fdf0ec]", fg: "text-white", sub: "text-white/65" },
+  SPECIALTY: { icon: Ham, sign: "bg-[#7a1f1a]", tint: "bg-[#f6ecea]", fg: "text-white", sub: "text-white/60" },
+  FAT: { icon: Drumstick, sign: "bg-[#f3e3c3]", tint: "bg-[#fbf6ea]", fg: "text-[#3a2a12]", sub: "text-[#3a2a12]/55" },
 };
 
 const CATEGORY_SHORT: Record<ProductCategory, string> = {
@@ -59,7 +59,7 @@ export function ProductArt({
   imageStyle?: "cutout" | "photo";
 }) {
   const art = ART[category];
-  const text = (label || name).replace(/^Pork\s+/i, "");
+  const text = label || name.replace(/^Pork\s+/i, "");
 
   if (imageUrl) {
     const local = imageUrl.startsWith("/");

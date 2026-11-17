@@ -3,9 +3,10 @@
  *
  *   node scripts/process-images.mjs
  *
- * 1. Logo: removes the navy background (colour-to-alpha against the background colour, applied
- *    only to the region connected to the image border, so the navy inside the badge is kept)
- *    and writes a transparent PNG plus trimmed icon sizes.
+ * 1. Logo: removes the plain background around the badge (colour-to-alpha against the background
+ *    colour, applied only to the region connected to the image border, so dark parts inside the
+ *    badge are kept) and writes a transparent PNG plus trimmed icon sizes.
+ *    Pass --logo-only to skip the product photos.
  * 2. Products: upscales each photo with Lanczos-3 to at least 1200px on the long edge, applies a
  *    light sharpen and writes high-quality WebP to public/products/hd/.
  *    Note: upscaling cannot add real detail. For true HD, supply originals >= 1200px.
@@ -19,7 +20,7 @@ const pub = (...p) => path.join(root, "public", ...p);
 
 // ───────────── Logo ─────────────
 async function processLogo() {
-  const src = pub("brand", "porkshop-logo.jpg");
+  const src = pub("brand", "piraso-logo.jpg");
   const { data, info } = await sharp(src).removeAlpha().raw().toBuffer({ resolveWithObject: true });
   const { width: W, height: H } = info;
   const N = W * H;
@@ -101,9 +102,9 @@ async function processLogo() {
   const outside = new Uint8Array(N);
   for (let i = 0; i < N; i++) outside[i] = grown[i] && !bright[i] ? 1 : 0;
 
-  // 3) Keep the artwork's dark outer outline: pixels within 3px of the silhouette stay opaque.
+  // 3) Keep the artwork's dark outer outline: pixels within 5px of the silhouette stay opaque.
   const region = new Uint8Array(N);
-  const R = 3;
+  const R = 5;
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const i = y * W + x;
@@ -161,7 +162,7 @@ async function processLogo() {
 
   const transparent = sharp(out, { raw: { width: W, height: H, channels: 4 } }).png();
   const trimmed = await transparent.toBuffer().then((b) => sharp(b).trim({ threshold: 2 }).png({ compressionLevel: 9 }).toBuffer());
-  fs.writeFileSync(pub("brand", "porkshop-logo.png"), trimmed);
+  fs.writeFileSync(pub("brand", "piraso-logo.png"), trimmed);
 
   // Square icon with padding, used for the favicon and home-screen icon.
   const icon = await sharp(trimmed)
@@ -170,8 +171,8 @@ async function processLogo() {
     .png({ compressionLevel: 9, palette: true, quality: 95 })
     .toBuffer();
   fs.writeFileSync(path.join(root, "src", "app", "icon.png"), icon);
-  // Apple home-screen icons don't support transparency: put the emblem on the brand navy.
-  await sharp({ create: { width: 180, height: 180, channels: 4, background: { r: 16, g: 22, b: 42, alpha: 1 } } })
+  // Apple home-screen icons don't support transparency: put the emblem on the brand Char.
+  await sharp({ create: { width: 180, height: 180, channels: 4, background: { r: 28, g: 15, b: 13, alpha: 1 } } })
     .composite([{ input: await sharp(trimmed).resize(150, 150, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).toBuffer(), gravity: "center" }])
     .png()
     .toFile(path.join(root, "src", "app", "apple-icon.png"));
@@ -203,4 +204,4 @@ async function processProducts() {
 }
 
 await processLogo();
-await processProducts();
+if (!process.argv.includes("--logo-only")) await processProducts();

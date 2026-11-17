@@ -65,7 +65,7 @@ const Toaster = (props: ToasterProps) => (
       classNames: {
         toast: cn(
           "flex w-full items-start gap-3 rounded-2xl border border-white/10 bg-night py-3 pr-11 pl-3 font-sans text-white",
-          "shadow-[0_1px_0_0_oklch(1_0_0/0.06)_inset,0_18px_40px_-12px_oklch(0.12_0.04_268/0.55),0_4px_12px_-4px_oklch(0.12_0.04_268/0.3)]",
+          "shadow-[0_1px_0_0_oklch(1_0_0/0.06)_inset,0_18px_40px_-12px_rgb(20_10_8/0.55),0_4px_12px_-4px_rgb(20_10_8/0.3)]",
           // Buttons end the toast themselves: no close button, and no space reserved for it.
           "has-[[data-button]]:pr-3 [&:has([data-button])_[data-close-button]]:hidden",
         ),
@@ -77,7 +77,7 @@ const Toaster = (props: ToasterProps) => (
         error: "border-red-300/25",
         warning: "border-amber-300/20",
         actionButton: cn(
-          "h-8 shrink-0 cursor-pointer rounded-lg bg-primary px-3 text-[13px] font-semibold text-white transition-colors hover:bg-[oklch(0.58_0.2_3)]",
+          "h-8 shrink-0 cursor-pointer rounded-lg bg-primary px-3 text-[13px] font-semibold text-white transition-colors hover:bg-[#a80a0a]",
           focus,
         ),
         cancelButton: cn(

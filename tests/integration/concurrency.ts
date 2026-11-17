@@ -38,7 +38,7 @@ async function main() {
   await db.product.update({ where: { id: head.id }, data: { stockQty: 1, reservedQty: 0 } });
   const race = await Promise.allSettled(
     Array.from({ length: 12 }, (_, i) =>
-      placeOrder(customers[i % customers.length]!.id, { items: [{ productId: head.id, qty: 1 }], pickupAt: slots[0]!.iso }),
+      placeOrder(customers[i % customers.length]!.id, { items: [{ productId: head.id, qty: 1 }], pickupAt: slots[0]!.iso, paymentMethod: "CASH" }),
     ),
   );
   const won = race.filter((r) => r.status === "fulfilled").length;
@@ -55,6 +55,7 @@ async function main() {
       placeOrder(customers[i % customers.length]!.id, {
         items: [{ productId: belly.id, qty: 0.5 }],
         pickupAt: slots[1 + (i % (slots.length - 1))]!.iso,
+        paymentMethod: "CASH",
       }),
     ),
   );
@@ -69,7 +70,7 @@ async function main() {
   const existing = await db.order.count({ where: { pickupAt: new Date(lastSlot), status: { not: "CANCELLED" } } });
   const slotBurst = await Promise.allSettled(
     Array.from({ length: 10 }, (_, i) =>
-      placeOrder(customers[i % customers.length]!.id, { items: [{ productId: belly.id, qty: 0.5 }], pickupAt: lastSlot }),
+      placeOrder(customers[i % customers.length]!.id, { items: [{ productId: belly.id, qty: 0.5 }], pickupAt: lastSlot, paymentMethod: "CASH" }),
     ),
   );
   const booked = await db.order.count({ where: { pickupAt: new Date(lastSlot), status: { not: "CANCELLED" } } });

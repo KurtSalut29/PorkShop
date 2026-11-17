@@ -14,12 +14,12 @@ const body = Instrument_Sans({ subsets: ["latin"], variable: "--font-body", disp
 const mono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-ticket", display: "swap" });
 
 export const metadata: Metadata = {
-  title: { default: "Porkshop: fresh pork, cut to order", template: "%s · Porkshop" },
+  title: { default: "Piraso: fresh cuts, fair prices", template: "%s · Piraso" },
   description: "Order fresh pork cuts online and pick them up at your chosen time. Priced by the actual weight.",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#10162a",
+  themeColor: "#1c0f0d",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

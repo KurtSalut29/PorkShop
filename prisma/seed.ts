@@ -1,5 +1,5 @@
 /**
- * Seeds Porkshop with the 10 products from the spec, demo accounts and ~2 weeks of realistic
+ * Seeds Piraso with the 10 products from the spec, demo accounts and ~2 weeks of realistic
  * history (deliveries, completed orders with actual weights, spoilage) so reports have data.
  *
  *   npm run db:seed        (wipes and re-creates all data)
@@ -50,7 +50,7 @@ const PRODUCTS: Seed[] = [
     description: "Tender, lean loin for chops, katsu, breaded pork and stir-fries. Boneless; sliced to your thickness." },
   { sku: "PK-HCK", name: "Pork Hock / Feet", localName: "Pata", category: "SPECIALTY", unit: "PIECE", price: 320, min: 1, step: 1, low: 4, finalStock: 9, popularity: 4,
     description: "Whole front or hind pata, cleaned and ready. Made for crispy pata, paksiw na pata and kare-kare. Sold per piece (approx. 1–1.3 kg)." },
-  { sku: "PK-GRD", name: "Pork Giniling", localName: "Ground Pork", category: "GROUND", unit: "KG", price: 310, min: 0.25, step: 0.25, low: 6, finalStock: 15, popularity: 9,
+  { sku: "PK-GRD", name: "Ground Pork", localName: "Pork Giniling", category: "GROUND", unit: "KG", price: 310, min: 0.25, step: 0.25, low: 6, finalStock: 15, popularity: 9,
     description: "Freshly ground every morning from shoulder and leg trimmings (80/20). For lumpia, embutido, picadillo and siomai." },
   { sku: "PK-HED", name: "Pork Head", localName: "Ulo", category: "SPECIALTY", unit: "PIECE", price: 680, min: 1, step: 1, low: 1, finalStock: 1, popularity: 1,
     description: "Whole cleaned pig head — the base for sisig, dinakdakan and pork stock. Sold per piece; we can split it on request." },
@@ -68,7 +68,7 @@ const PHOTOS: Record<string, string> = {
   "pork-shoulder": "/products/hd/pork-shoulder.webp",
   "pork-loin": "/products/hd/pork-loin.webp",
   "pork-hock-feet": "/products/hd/pork-hock-feet.webp",
-  "pork-giniling": "/products/hd/pork-giniling.webp",
+  "ground-pork": "/products/hd/pork-giniling.webp",
   "pork-head": "/products/hd/pork-head.webp",
   "pork-fat": "/products/hd/pork-fat.webp",
   "pork-bones": "/products/hd/pork-bones.webp",
@@ -370,7 +370,7 @@ async function main() {
     data: [
       { userId: owner, type: "STOCK", title: "Low stock: Pork Fat", body: "4 kg available (alert level 5 kg).", href: "/owner/inventory", createdAt: manila(1, 17) },
       { userId: owner, type: "STOCK", title: "Low stock: Pork Head", body: "1 pc available (alert level 1 pc).", href: "/owner/inventory", createdAt: manila(1, 15) },
-      { userId: juan, type: "SYSTEM", title: "Welcome to Porkshop", body: "Order fresh cuts online and pick them up at your chosen time.", href: "/shop", createdAt: since },
+      { userId: juan, type: "SYSTEM", title: "Welcome to Piraso", body: "Order fresh cuts online and pick them up at your chosen time.", href: "/shop", createdAt: since },
     ],
   });
 

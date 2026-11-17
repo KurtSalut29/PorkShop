@@ -104,18 +104,3 @@ export async function runAssignment(): Promise<number> {
 export function triggerAssignment() {
   runAssignment().catch((err) => console.error("[assignment] run failed", err));
 }
-
-const globalForSweeper = globalThis as unknown as { assignmentSweeper?: NodeJS.Timeout };
-
-/** Background safety net: re-runs the dispatcher periodically in case a trigger was missed. */
-export function startAssignmentSweeper(intervalMs = 30_000) {
-  if (globalForSweeper.assignmentSweeper) return;
-  globalForSweeper.assignmentSweeper = setInterval(() => {
-    runAssignment().catch((err) => {
-      // P2028 = couldn't get a transaction in time (database busy). The next sweep retries it.
-      if ((err as { code?: string })?.code === "P2028") console.warn("[assignment] database busy, will retry on the next sweep");
-      else console.error("[assignment] sweep failed", err);
-    });
-  }, intervalMs);
-  globalForSweeper.assignmentSweeper.unref?.();
-}

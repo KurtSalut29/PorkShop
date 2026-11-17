@@ -9,7 +9,8 @@ type Range = { fromKey: string; toKey: string; start: Date; end: Date };
 /** Completed orders = recognised sales. Revenue uses the final (actual-weight) totals. */
 export async function salesReport(range: Range) {
   const daily = await db.$queryRaw<{ day: string; orders: number; revenue: Prisma.Decimal }[]>`
-    SELECT to_char(("completedAt" AT TIME ZONE 'Asia/Manila')::date, 'YYYY-MM-DD') AS day,
+    -- "completedAt" is stored in UTC: convert it to shop time before taking the date.
+    SELECT to_char((("completedAt" AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Manila')::date, 'YYYY-MM-DD') AS day,
            COUNT(*)::int AS orders,
            COALESCE(SUM(COALESCE("finalTotal", "estimatedTotal")), 0) AS revenue
     FROM "Order"

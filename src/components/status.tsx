@@ -9,6 +9,7 @@ import {
   type DutyStatus,
   type OrderStatus,
   type PaymentMethod,
+  type PaymentStatus,
   type StockTxnType,
   type Tone,
 } from "@/lib/constants";
@@ -70,12 +71,13 @@ export function StockLevelBadge({ level }: { level: "ok" | "low" | "out" }) {
   return <ToneBadge tone="emerald">In stock</ToneBadge>;
 }
 
-export function PaymentBadge({ status, method }: { status: "PAID" | "UNPAID"; method?: PaymentMethod | null }) {
-  return status === "PAID" ? (
-    <ToneBadge tone="emerald">Paid{method ? ` · ${PAYMENT_METHOD_LABEL[method]}` : ""}</ToneBadge>
-  ) : (
-    <ToneBadge tone="stone">Pay at pickup</ToneBadge>
-  );
+/** Payment state, always as words (colour only reinforces it). */
+export function PaymentBadge({ status, method }: { status: PaymentStatus; method?: PaymentMethod | null }) {
+  if (status === "PAID") return <ToneBadge tone="emerald">Paid{method ? ` · ${PAYMENT_METHOD_LABEL[method]}` : ""}</ToneBadge>;
+  if (status === "SUBMITTED") return <ToneBadge tone="sky">GCash · verifying</ToneBadge>;
+  if (status === "REJECTED") return <ToneBadge tone="red">GCash · not verified</ToneBadge>;
+  if (method === "GCASH") return <ToneBadge tone="amber">GCash · not paid yet</ToneBadge>;
+  return <ToneBadge tone="stone">Cash at pickup</ToneBadge>;
 }
 
 export function StockTxnBadge({ type }: { type: StockTxnType }) {

@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Container, PageSkeleton } from "@/components/page";
 import { requireRole } from "@/server/dal";
 import { pickupDays } from "@/server/queries/misc";
+import { getSettings } from "@/server/settings";
 import { CheckoutForm } from "./checkout-form";
 
 export const metadata: Metadata = { title: "Checkout" };
@@ -21,6 +22,17 @@ export default function CheckoutPage() {
 
 async function Checkout() {
   const user = await requireRole("CUSTOMER");
-  const { days, slotMinutes } = await pickupDays();
-  return <CheckoutForm days={days} slotMinutes={slotMinutes} customer={{ name: user.name, phone: user.phone ?? "" }} />;
+  const [{ days, slotMinutes }, settings] = await Promise.all([pickupDays(), getSettings()]);
+  return (
+    <CheckoutForm
+      days={days}
+      slotMinutes={slotMinutes}
+      customer={{ name: user.name, phone: user.phone ?? "" }}
+      payment={{
+        gcashEnabled: settings.gcashEnabled && !!settings.gcashNumber && !!settings.gcashQrUrl,
+        paymentWindowMinutes: settings.paymentWindowMinutes,
+        pickupHoldHours: settings.pickupHoldHours,
+      }}
+    />
+  );
 }

@@ -143,3 +143,21 @@ export async function setPaymentAction(orderId: string, paid: boolean, method?: 
     return toActionError(err);
   }
 }
+
+// ── GCash payments ──
+/** Staff confirm or reject a customer's submitted GCash payment. */
+export async function reviewPaymentAction(orderId: string, accept: boolean, note?: string): Promise<ActionResult> {
+  try {
+    const user = await assertRole("WORKER", "OWNER");
+    const n = z.string().trim().max(200).optional().safeParse(note);
+    if (!n.success) return { ok: false, message: "Keep the note under 200 characters." };
+    await orders.reviewPayment(user, orderId, accept, n.data);
+    refresh();
+    return {
+      ok: true,
+      message: accept ? "Payment verified. The customer has been notified." : "Payment rejected. The customer was asked to resubmit.",
+    };
+  } catch (err) {
+    return toActionError(err);
+  }
+}

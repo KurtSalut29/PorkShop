@@ -83,7 +83,7 @@ export function SignUpForm() {
       }
       return;
     }
-    toast.success(`Welcome to Porkshop, ${name.split(" ")[0]}!`, {
+    toast.success(`Welcome to Piraso, ${name.split(" ")[0]}!`, {
       id,
       description: next === "/checkout" ? "Your account is ready. Choose a pickup time to finish your order." : "Your account is ready. Start browsing today’s cuts.",
     });

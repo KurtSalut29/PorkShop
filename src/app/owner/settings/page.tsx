@@ -11,7 +11,7 @@ export default async function SettingsPage() {
   const s = await getSettings();
   return (
     <>
-      <PageHeader title="Settings" description="Shop hours, pickup capacity and assignment rules. Changes are audited." />
+      <PageHeader title="Settings" description="Shop hours, pickup capacity, assignment rules and payments. Changes are audited." />
       <SettingsForm
         settings={{
           shopName: s.shopName,
@@ -22,6 +22,12 @@ export default async function SettingsPage() {
           leadTimeMinutes: s.leadTimeMinutes,
           advanceDays: s.advanceDays,
           maxActiveOrdersPerWorker: s.maxActiveOrdersPerWorker,
+          gcashEnabled: s.gcashEnabled,
+          gcashName: s.gcashName,
+          gcashNumber: s.gcashNumber,
+          gcashQrUrl: s.gcashQrUrl ?? "",
+          paymentWindowMinutes: s.paymentWindowMinutes,
+          pickupHoldHours: s.pickupHoldHours,
         }}
       />
     </>

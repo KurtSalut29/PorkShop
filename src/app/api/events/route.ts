@@ -1,4 +1,4 @@
-import { startAssignmentSweeper } from "@/server/assignment";
+import { startSweeper } from "@/server/sweeper";
 import { auth } from "@/server/auth";
 import { realtimeHub, type RealtimeEvent } from "@/server/realtime";
 
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
 
   await realtimeHub.ensureConnected();
   // The background dispatcher sweep starts with the first live connection on this instance.
-  startAssignmentSweeper();
+  startSweeper(); // normally already running (see instrumentation.ts); a no-op then
   const encoder = new TextEncoder();
   let cleanup = () => {};
 

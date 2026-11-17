@@ -14,7 +14,7 @@ export default function SignInPage() {
         <SignInForm />
       </Suspense>
       <p className="mt-8 text-center text-sm text-muted-foreground">
-        New to Porkshop?{" "}
+        New to Piraso?{" "}
         <AuthSwitchLink href="/sign-up">Create a customer account</AuthSwitchLink>
       </p>
       <p className="mt-3 text-center text-xs text-muted-foreground">

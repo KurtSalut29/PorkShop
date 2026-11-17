@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CalendarX2, Loader2, Lock, Store } from "lucide-react";
+import { CalendarX2, Check, Loader2, Lock, QrCode, Store } from "lucide-react";
 import { placeOrderAction } from "@/app/actions/orders";
 import { useCart } from "@/components/cart/cart-context";
 import { useConfirm } from "@/components/feedback/confirm";
@@ -19,13 +19,17 @@ import { lineEstimate } from "@/lib/pricing";
 import type { PickupDay } from "@/lib/slots";
 import { cn } from "@/lib/utils";
 
+type PaymentOptions = { gcashEnabled: boolean; paymentWindowMinutes: number; pickupHoldHours: number };
+
 export function CheckoutForm({
   days,
   customer,
+  payment,
 }: {
   days: PickupDay[];
   slotMinutes: number;
   customer: { name: string; phone: string };
+  payment: PaymentOptions;
 }) {
   const router = useRouter();
   const confirm = useConfirm();
@@ -34,6 +38,10 @@ export function CheckoutForm({
   const [dayKey, setDayKey] = useState(firstOpenDay?.key ?? days[0]?.key ?? "");
   const [slot, setSlot] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
+  // GCash is suggested first when the shop accepts it: a paid order is one the customer will collect.
+  const [method, setMethod] = useState<"GCASH" | "CASH">(payment.gcashEnabled ? "GCASH" : "CASH");
+  const gcash = method === "GCASH" && payment.gcashEnabled;
+  const hold = `${payment.pickupHoldHours} hour${payment.pickupHoldHours > 1 ? "s" : ""}`;
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -65,11 +73,13 @@ export function CheckoutForm({
     }
     const ok = await confirm({
       title: "Place this order?",
-      description: "We’ll reserve these cuts for you and assign your order to a butcher right away. You can cancel free of charge until preparation starts.",
+      description: gcash
+        ? `We’ll reserve these cuts for ${payment.paymentWindowMinutes} minutes while you pay by GCash. Once your payment is submitted, your order goes to a butcher.`
+        : `We’ll reserve these cuts and assign your order to a butcher right away. Please pick it up within ${hold} of your pickup time, or it will be released.`,
       details: [
         ...items.map((i) => ({ label: `${i.name} · ${formatQty(i.qty, i.unit)}`, value: formatPeso(lineEstimate(i.price, i.qty)) })),
         { label: "Pickup", value: `${day?.label}, ${chosen.label}` },
-        { label: "Payment", value: "At the counter" },
+        { label: "Payment", value: gcash ? `GCash, within ${payment.paymentWindowMinutes} min` : "Cash at pickup" },
         { label: "Estimated total", value: formatPeso(subtotal) },
       ],
       confirmLabel: "Place order",
@@ -83,11 +93,14 @@ export function CheckoutForm({
             items: items.map((i) => ({ productId: i.productId, qty: i.qty })),
             pickupAt: slot,
             notes: notes.trim() || undefined,
+            paymentMethod: gcash ? "GCASH" : "CASH",
           }),
         {
           loading: "Placing your order…",
           success: "Order placed",
-          successDescription: "We’re assigning it to a butcher now. You’ll get an update at every step.",
+          successDescription: gcash
+            ? `Please complete your GCash payment within ${payment.paymentWindowMinutes} minutes.`
+            : `Please pick it up within ${hold} of your pickup time. You’ll get an update at every step.`,
         },
       );
       if (!res) return;
@@ -194,15 +207,28 @@ export function CheckoutForm({
 
         <section className="rounded-2xl border bg-card p-5 sm:p-6">
           <h2 className="flex items-center gap-2.5 text-base"><StepNo n={3} />Payment</h2>
-          <div className="mt-3 flex items-start gap-3 rounded-lg border bg-muted/40 p-4">
-            <Store className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
-            <div className="text-sm">
-              <p className="font-medium">Pay at pickup</p>
-              <p className="mt-0.5 text-muted-foreground">
-                Cash, GCash or card at the counter. You pay the final amount based on the actual weight.
-              </p>
-            </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Payment method">
+            {payment.gcashEnabled && (
+              <PaymentChoice
+                selected={method === "GCASH"}
+                onSelect={() => setMethod("GCASH")}
+                icon={QrCode}
+                title="Pay now with GCash"
+                badge="Order secured"
+                body={`Scan the shop’s QR code and upload your receipt within ${payment.paymentWindowMinutes} minutes. Your order is prepared once it’s paid.`}
+              />
+            )}
+            <PaymentChoice
+              selected={!gcash}
+              onSelect={() => setMethod("CASH")}
+              icon={Store}
+              title="Cash at pickup"
+              body={`Pay the weighed amount at the counter. Please pick up within ${hold} of your pickup time, or the order is released.`}
+            />
           </div>
+          {!payment.gcashEnabled && (
+            <p className="mt-2 text-xs text-muted-foreground">Online payment by GCash isn’t available right now.</p>
+          )}
           <p className="mt-4 text-sm text-muted-foreground">
             Pickup under <span className="font-medium text-foreground">{customer.name}</span>
             {customer.phone && <> · {customer.phone}</>}.{" "}
@@ -222,7 +248,11 @@ export function CheckoutForm({
             { label: "Pickup", value: chosen ? `${day?.label}, ${chosen.label}` : "Not chosen yet", muted: !chosen },
           ]}
           total={{ label: "Estimate", value: formatPeso(subtotal) }}
-          footnote="You pay the weighed amount at the counter."
+          footnote={
+            gcash
+              ? "You pay this estimate by GCash now. Any small difference after weighing is settled at pickup."
+              : "You pay the weighed amount at the counter."
+          }
         />
         <div className="mt-4">
           <FormAlert state={error ? { ok: false, message: error } : null} />
@@ -234,6 +264,52 @@ export function CheckoutForm({
         <p className="mt-3 text-center text-xs text-muted-foreground">Free cancellation until we start preparing it.</p>
       </aside>
     </div>
+  );
+}
+
+function PaymentChoice({
+  selected,
+  onSelect,
+  icon: Icon,
+  title,
+  body,
+  badge,
+}: {
+  selected: boolean;
+  onSelect: () => void;
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  body: string;
+  badge?: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={selected}
+      onClick={onSelect}
+      className={cn(
+        "relative flex items-start gap-3 rounded-xl border p-4 text-left transition-colors",
+        selected ? "border-primary bg-primary/[0.04] ring-1 ring-primary" : "hover:bg-muted/60",
+      )}
+    >
+      <span
+        className={cn(
+          "grid size-9 shrink-0 place-items-center rounded-lg",
+          selected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
+        )}
+      >
+        <Icon className="size-[18px]" />
+      </span>
+      <span className="min-w-0 pr-5 text-sm">
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-1 font-medium">
+          {title}
+          {badge && <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">{badge}</span>}
+        </span>
+        <span className="mt-1 block leading-relaxed text-muted-foreground">{body}</span>
+      </span>
+      {selected && <Check className="absolute top-3 right-3 size-4 text-primary" strokeWidth={3} />}
+    </button>
   );
 }
 

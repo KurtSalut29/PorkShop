@@ -6,6 +6,7 @@ import { fieldErrors, productSchema, settingsSchema, workerSchema, workerUpdateS
 import { runAssignment, triggerAssignment } from "@/server/assignment";
 import { audit } from "@/server/audit";
 import { db } from "@/server/db";
+import { deleteImageIfUnused, uploadedImageId } from "@/server/product-images";
 import { assertRole } from "@/server/dal";
 import { toActionError, type ActionResult } from "@/server/errors";
 import * as products from "@/server/products";
@@ -136,19 +137,27 @@ export async function saveSettingsAction(_prev: ActionResult | null, formData: F
     const user = await assertRole("OWNER");
     const parsed = settingsSchema.safeParse(Object.fromEntries(formData));
     if (!parsed.success) return invalid(parsed.error);
+    const data = { ...parsed.data, gcashQrUrl: parsed.data.gcashQrUrl || null };
+    const qrId = uploadedImageId(data.gcashQrUrl);
+    if (data.gcashQrUrl && (!qrId || !(await db.productImage.count({ where: { id: qrId } })))) {
+      return { ok: false, message: "The QR code image is no longer available. Upload it again.", fieldErrors: { gcashQrUrl: ["Upload the QR code again."] } };
+    }
+    let oldQr: string | null = null;
     await db.$transaction(async (tx) => {
       const before = await tx.shopSettings.findUnique({ where: { id: 1 } });
-      await tx.shopSettings.upsert({ where: { id: 1 }, create: { id: 1, ...parsed.data }, update: parsed.data });
+      oldQr = before?.gcashQrUrl ?? null;
+      await tx.shopSettings.upsert({ where: { id: 1 }, create: { id: 1, ...data }, update: data });
       await audit(tx, {
         actorId: user.id,
         action: "settings.update",
         entityType: "Settings",
         entityId: "1",
         summary: "Updated shop settings",
-        details: { before: before ? { ...before, updatedAt: undefined } : null, after: parsed.data },
+        details: { before: before ? { ...before, updatedAt: undefined } : null, after: data },
       });
       await publish({ kind: "settings", topics: ["all"] }, tx);
     });
+    if (oldQr && oldQr !== data.gcashQrUrl) await deleteImageIfUnused(oldQr);
     triggerAssignment();
     refresh();
     return { ok: true, message: "Settings saved." };

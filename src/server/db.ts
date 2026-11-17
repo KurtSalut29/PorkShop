@@ -5,7 +5,14 @@ import { PrismaClient } from "@/generated/prisma/client";
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
 function createClient() {
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL!, max: 15 });
+  const adapter = new PrismaPg({
+    connectionString: process.env.DATABASE_URL!,
+    max: 15,
+    // Prisma stores DateTime columns in UTC. Run every session in UTC too, so SQL like
+    // `"updatedAt" = now()` and comparisons against JS dates mean the same instant
+    // whatever the database server's own time zone is (the Docker one is Asia/Manila).
+    options: "-c TimeZone=UTC",
+  });
   return new PrismaClient({
     adapter,
     // Busy moments (a burst of checkouts, the dispatcher, live updates) can briefly use every

@@ -1,8 +1,10 @@
-# Running Porkshop on your own computer
+# Running Piraso on your own computer
 
-This guide takes you from a brand-new laptop to Porkshop running at **http://localhost:3000**. Follow the parts in order and type each command exactly as shown.
+> Piraso was previously called Porkshop. The GitHub repository, the `PorkShop` folder and the `porkshop-db` database keep the old name; that's expected.
 
-- **Time needed:** about 30–45 minutes the first time, mostly waiting for downloads. After that, starting Porkshop takes under a minute.
+This guide takes you from a brand-new laptop to Piraso running at **http://localhost:3000**. Follow the parts in order and type each command exactly as shown.
+
+- **Time needed:** about 30–45 minutes the first time, mostly waiting for downloads. After that, starting Piraso takes under a minute.
 - **Works on:** Windows 10/11 (64-bit) and macOS 12 or newer.
 - **You'll need:** 8 GB of RAM (16 GB is more comfortable), about 5 GB of free disk space, an internet connection during setup, and permission to install programs.
 
@@ -18,13 +20,13 @@ This guide takes you from a brand-new laptop to Porkshop running at **http://loc
 4. [Start the database](#part-4--start-the-database)
 5. [Install the app's packages](#part-5--install-the-apps-packages)
 6. [Create the tables and sample data](#part-6--create-the-tables-and-sample-data)
-7. [Build and start Porkshop](#part-7--build-and-start-porkshop)
+7. [Build and start Piraso](#part-7--build-and-start-piraso)
 8. [Sign in and set up your shop](#part-8--sign-in-and-set-up-your-shop)
 - [Everyday use](#everyday-use-starting-and-stopping)
 - [Getting updates](#getting-updates)
 - [Backing up and restoring your data](#backing-up-and-restoring-your-data)
 - [Troubleshooting](#troubleshooting)
-- [Removing Porkshop](#removing-porkshop)
+- [Removing Piraso](#removing-piraso)
 
 ---
 
@@ -41,7 +43,7 @@ Type (or paste) a command, then press **Enter**. Wait until the command finishes
 
 ## Part 1 — Install the tools (one time)
 
-Porkshop needs three free programs: **Git** downloads the code, **Node.js** runs the app, and **Docker Desktop** runs the database.
+Piraso needs three free programs: **Git** downloads the code, **Node.js** runs the app, and **Docker Desktop** runs the database.
 
 ### 1.1 Git
 
@@ -50,7 +52,7 @@ Porkshop needs three free programs: **Git** downloads the code, **Node.js** runs
 
 ### 1.2 Node.js 24 (LTS)
 
-Go to https://nodejs.org/en/download and download **version 24 (LTS)**. If the page offers a newer version by default, use its version menu to choose **v24**. Porkshop was tested with Node.js 24; version 22.12 or newer also works.
+Go to https://nodejs.org/en/download and download **version 24 (LTS)**. If the page offers a newer version by default, use its version menu to choose **v24**. Piraso was tested with Node.js 24; version 22.12 or newer also works.
 
 - **Windows:** run the `.msi` installer and keep the defaults. You can leave *"Automatically install the necessary tools"* unticked.
 - **macOS:** run the `.pkg` installer.
@@ -102,7 +104,7 @@ Your numbers may be slightly different. `node -v` must start with **v24** (or be
 
 ## Part 2 — Download the project
 
-Create a **Projects** folder in your home folder and download Porkshop into it:
+Create a **Projects** folder in your home folder and download Piraso into it:
 
 ```bash
 mkdir ~/Projects
@@ -121,7 +123,7 @@ When it's done, the terminal is inside the `PorkShop` folder. **Run every remain
 
 ## Part 3 — Create the settings file (`.env`)
 
-Porkshop reads its settings from a file named `.env`. **Create it before Part 5:** the package install in Part 5 fails without it.
+Piraso reads its settings from a file named `.env`. **Create it before Part 5:** the package install in Part 5 fails without it.
 
 **1. Copy the example file:**
 
@@ -168,7 +170,7 @@ Save the file and close the editor. Leave the other lines as they are:
 |---|---|
 | `DATABASE_URL` | Where the database is. Matches Part 4; don't change it. |
 | `BETTER_AUTH_SECRET` | The key you just pasted. Keep it private, and don't change it later, or everyone will be signed out. |
-| `BETTER_AUTH_URL` | The address you open Porkshop at: `http://localhost:3000`. |
+| `BETTER_AUTH_URL` | The address you open Piraso at: `http://localhost:3000`. |
 | `NEXT_PUBLIC_APP_URL` | Same address as above. |
 
 ---
@@ -206,7 +208,7 @@ npm install
 This takes about 2–5 minutes. It finishes with a line like `added … packages` and returns you to the prompt.
 
 - Messages about **"vulnerabilities"**, **"deprecated"** or **"funding"** are normal. You can ignore them.
-- **Don't run `npm audit fix --force`.** It upgrades packages to versions Porkshop hasn't been tested with and can break it.
+- **Don't run `npm audit fix --force`.** It upgrades packages to versions Piraso hasn't been tested with and can break it.
 - If you see `PrismaConfigEnvError: Cannot resolve environment variable: DATABASE_URL`, the `.env` file is missing. Do Part 3, then run `npm install` again.
 
 ---
@@ -237,7 +239,7 @@ It prints a table of the demo accounts and ends with `The seed command has been 
 
 ---
 
-## Part 7 — Build and start Porkshop
+## Part 7 — Build and start Piraso
 
 **1. Build the app** (about 1–3 minutes, and the database must be running):
 
@@ -261,9 +263,9 @@ When you see
 
 open **http://localhost:3000** in your browser. 🎉
 
-**Keep this terminal window open** while you use Porkshop; closing it stops the app. To stop Porkshop, click the terminal and press **Ctrl + C**.
+**Keep this terminal window open** while you use Piraso; closing it stops the app. To stop Piraso, click the terminal and press **Ctrl + C**.
 
-> Always open Porkshop at exactly `http://localhost:3000`. Signing in won't work at `http://127.0.0.1:3000` or any other address.
+> Always open Piraso at exactly `http://localhost:3000`. Signing in won't work at `http://127.0.0.1:3000` or any other address.
 
 ---
 
@@ -288,6 +290,8 @@ Sign in at http://localhost:3000/sign-in. The owner lands in the **Owner console
 3. **Set up your team:** *Workers* → *Add worker* for each real worker. Deactivate the sample workers (Maria, Jose and Ana) when you no longer need them.
 4. **Review your products:** *Products* → edit prices and upload your own photos.
 5. **Record your real stock:** *Stock levels* → *Record delivery*.
+6. **Turn on GCash payments (optional):** *Settings* → *GCash payments* → tick *Accept GCash payments*, enter the account name and number, and upload the shop's GCash QR code (in the GCash app: *Receive* → *QR* → *Download*). Then *Save settings*.
+7. **Check the time limits:** *Settings* → *Payment and pickup time limits*. By default, customers paying by GCash have **10 minutes** to submit their payment, and packed cash orders are held for **2 hours** after their pickup time. Orders past these limits are cancelled automatically and their stock goes back on sale.
 
 The sample orders and sales history are there for practice. Ask your developer for a clean database with only your owner account when you're ready to go live.
 
@@ -295,7 +299,7 @@ The sample orders and sales history are there for practice. Ask your developer f
 
 ## Everyday use: starting and stopping
 
-**To start Porkshop:**
+**To start Piraso:**
 
 1. Open **Docker Desktop** and wait for **Engine running**.
 2. Open a terminal and run:
@@ -308,7 +312,7 @@ The sample orders and sales history are there for practice. Ask your developer f
 
 3. Open http://localhost:3000.
 
-**To stop Porkshop:** press **Ctrl + C** in the terminal. You can leave the database running, or stop it with `docker compose stop`. Shutting down the laptop is also safe; your data is kept.
+**To stop Piraso:** press **Ctrl + C** in the terminal. You can leave the database running, or stop it with `docker compose stop`. Shutting down the laptop is also safe; your data is kept.
 
 You only need `npm run build` again after [getting updates](#getting-updates).
 
@@ -316,7 +320,7 @@ You only need `npm run build` again after [getting updates](#getting-updates).
 
 ## Getting updates
 
-When your developer releases a new version, stop Porkshop (**Ctrl + C**), [back up your data](#backing-up-and-restoring-your-data), then run:
+When your developer releases a new version, stop Piraso (**Ctrl + C**), [back up your data](#backing-up-and-restoring-your-data), then run:
 
 ```bash
 cd ~/Projects/PorkShop
@@ -350,7 +354,7 @@ This creates `porkshop-backup.sql` in the `PorkShop` folder. Copy it somewhere s
 
 > ⚠️ Restoring **replaces all current data** with the backup.
 
-1. Stop Porkshop (**Ctrl + C**).
+1. Stop Piraso (**Ctrl + C**).
 2. Put the backup file in the `PorkShop` folder, named `porkshop-backup.sql`.
 3. Run:
 
@@ -362,7 +366,7 @@ This creates `porkshop-backup.sql` in the `PorkShop` folder. Copy it somewhere s
 
    It may print a few numbers (such as `1076`). That's normal.
 
-4. Start Porkshop again with `npm start`.
+4. Start Piraso again with `npm start`.
 
 ---
 
@@ -380,8 +384,8 @@ Find the message you see, then follow the fix.
 | `Bind for 0.0.0.0:5433 failed: port is already allocated` | Another program uses port 5433. In `docker-compose.yml` change `"5433:5432"` to `"5434:5432"`; in `.env` change `localhost:5433` to `localhost:5434`. Then run `docker compose up -d` again. |
 | `Conflict. The container name "/porkshop-db" is already in use` | An older copy of the database container exists. Run `docker rm -f porkshop-db`, then `docker compose up -d`. This doesn't delete your data. |
 | `Can't reach database server at localhost:5433` | The database isn't running. Open Docker Desktop, then run `docker compose up -d` and wait for **(healthy)** in `docker ps`. |
-| `Error: listen EADDRINUSE: address already in use :::3000` | Port 3000 is in use (often Porkshop is already running in another terminal). Close the other one, or run on another port: change both `localhost:3000` addresses in `.env` to `localhost:3001`, run `npm start -- -p 3001`, and open http://localhost:3001. |
-| The sign-in button does nothing, or sign-in fails with a correct password | Make sure the address in your browser exactly matches `BETTER_AUTH_URL` in `.env` (normally `http://localhost:3000`, not `127.0.0.1`). If you edited `.env`, stop Porkshop with **Ctrl + C** and run `npm start` again. |
+| `Error: listen EADDRINUSE: address already in use :::3000` | Port 3000 is in use (often Piraso is already running in another terminal). Close the other one, or run on another port: change both `localhost:3000` addresses in `.env` to `localhost:3001`, run `npm start -- -p 3001`, and open http://localhost:3001. |
+| The sign-in button does nothing, or sign-in fails with a correct password | Make sure the address in your browser exactly matches `BETTER_AUTH_URL` in `.env` (normally `http://localhost:3000`, not `127.0.0.1`). If you edited `.env`, stop Piraso with **Ctrl + C** and run `npm start` again. |
 | Pages show *"Something went wrong"* or keep loading | The database probably stopped. Open Docker Desktop, run `docker compose up -d`, and refresh the page. |
 | `npm run build` fails | Make sure the database is running (`docker ps` shows **porkshop-db (healthy)**), then run `npm run build` again. |
 | `npm install` fails with network or `ETIMEDOUT` errors | Check your internet connection and run `npm install` again. It continues where it stopped. |
@@ -390,9 +394,9 @@ If something still doesn't work, send your developer a screenshot of the full te
 
 ---
 
-## Removing Porkshop
+## Removing Piraso
 
-To delete Porkshop **and all of its data** permanently:
+To delete Piraso **and all of its data** permanently:
 
 ```bash
 cd ~/Projects/PorkShop

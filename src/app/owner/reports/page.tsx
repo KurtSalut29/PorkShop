@@ -168,7 +168,7 @@ async function SalesTab({ range }: { range: Range }) {
                   </div>
                   <div className="mt-2 flex items-center gap-3">
                     <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                      <div className="h-full rounded-full bg-[#c02a5e]" style={{ width: `${pct}%` }} />
+                      <div className="h-full rounded-full bg-[#c70c0c]" style={{ width: `${pct}%` }} />
                     </div>
                     <span className="num w-24 text-right text-xs text-muted-foreground">
                       {pct.toFixed(0)}% · {m.orders} orders

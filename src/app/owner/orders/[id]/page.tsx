@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { StaffOrderDetail } from "@/components/staff/order-detail";
 import { OrderWorkflow } from "@/components/staff/order-workflow";
+import { PaymentReview } from "@/components/staff/payment-review";
 import { requireRole } from "@/server/dal";
 import { getOrderForOwner, listAssignableWorkers } from "@/server/queries/orders";
 import { getSettings } from "@/server/settings";
@@ -40,7 +41,8 @@ export default async function OwnerOrderPage({ params }: PageProps<"/owner/order
               )}
             </section>
           )}
-          {open && order.status !== "PENDING" && (
+          <PaymentReview order={order} />
+          {open && order.status !== "PENDING" && order.status !== "AWAITING_PAYMENT" && (
             <details className="group rounded-xl border bg-card shadow-xs">
               <summary className="cursor-pointer list-none px-5 py-4 text-sm font-medium">
                 Act on behalf of the worker <span className="text-muted-foreground group-open:hidden">▾</span>

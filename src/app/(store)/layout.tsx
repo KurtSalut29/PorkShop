@@ -4,6 +4,7 @@ import { CalendarClock, Scale, Store } from "lucide-react";
 import { Logo } from "@/components/brand";
 import { CartButton } from "@/components/cart/cart-button";
 import { CartProvider } from "@/components/cart/cart-context";
+import { MobileCartBar } from "@/components/cart/mobile-cart-bar";
 import { NotificationBell } from "@/components/notification-bell";
 import { Container } from "@/components/page";
 import { RealtimeListener } from "@/components/realtime-listener";
@@ -83,7 +84,7 @@ export default function StoreLayout({ children }: LayoutProps<"/">) {
               <Scale className="size-3.5" /> Priced by actual weight
             </span>
             <span className="flex items-center gap-1.5">
-              <CalendarClock className="size-3.5" /> Pay at the counter
+              <CalendarClock className="size-3.5" /> Cash or GCash
             </span>
           </span>
         </Container>
@@ -91,7 +92,7 @@ export default function StoreLayout({ children }: LayoutProps<"/">) {
       {/* Floating nav: takes no space of its own (main reserves --store-nav), so it hovers over the hero. */}
       <header style={{ viewTransitionName: "site-header" }} className="pointer-events-none sticky top-0 z-40 mb-[calc(var(--store-nav)*-1)] h-(--store-nav) pt-3">
         <Container>
-          <div className="pointer-events-auto rounded-2xl border border-black/[0.06] bg-card/95 shadow-[0_1px_2px_oklch(0.2_0.03_268/0.06),0_12px_32px_-12px_oklch(0.2_0.03_268/0.28)] backdrop-blur-xl backdrop-saturate-150">
+          <div className="pointer-events-auto rounded-2xl border border-black/[0.06] bg-card/95 shadow-[0_1px_2px_rgb(36_19_15/0.06),0_12px_32px_-12px_rgb(36_19_15/0.26)] backdrop-blur-xl backdrop-saturate-150">
             <div className="flex h-16 items-center gap-4 pr-2.5 pl-3.5 sm:gap-8 sm:pr-3 sm:pl-5">
               <Logo href="/" />
               <StoreNav />
@@ -114,7 +115,7 @@ export default function StoreLayout({ children }: LayoutProps<"/">) {
           <div>
             <Logo href="/" inverted />
             <p className="mt-4 max-w-xs leading-relaxed">
-              Fresh pork from trusted local farms, cut to order and weighed in front of you.
+              Fresh cuts, fair prices. Pork from trusted local farms, cut to order and weighed in front of you.
             </p>
           </div>
           <div>
@@ -129,12 +130,13 @@ export default function StoreLayout({ children }: LayoutProps<"/">) {
           <div>
             <p className="text-[11px] font-semibold tracking-[0.16em] text-white uppercase">Pickup</p>
             <p className="mt-3 leading-relaxed">
-              Choose a time at checkout and we’ll notify you when your order is packed. Pay by cash, GCash or card at the
+              Choose a time at checkout and we’ll notify you when your order is packed. Pay online by GCash or in cash at the
               counter.
             </p>
           </div>
         </Container>
       </footer>
+      <MobileCartBar />
     </CartProvider>
   );
 }

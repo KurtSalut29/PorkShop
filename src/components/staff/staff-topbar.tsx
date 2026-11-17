@@ -47,8 +47,11 @@ export async function NavCount({ kind, role }: { kind: NavCountKind; role: "OWNE
   let urgent = false;
   if (kind === "orders") {
     const [open, attention] = await Promise.all([
-      db.order.count({ where: { status: { in: ["PENDING", "ASSIGNED", "PROCESSING", "READY"] } } }),
-      db.order.count({ where: { cancelRequest: "PENDING" } }),
+      db.order.count({ where: { status: { in: ["AWAITING_PAYMENT", "PENDING", "ASSIGNED", "PROCESSING", "READY"] } } }),
+      // Needs the owner: a cancellation request or a GCash payment to verify.
+      db.order.count({
+        where: { OR: [{ cancelRequest: "PENDING" }, { paymentStatus: "SUBMITTED", status: { not: "CANCELLED" } }] },
+      }),
     ]);
     count = open;
     urgent = attention > 0;
